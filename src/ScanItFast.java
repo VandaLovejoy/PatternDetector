@@ -30,7 +30,7 @@ public class ScanItFast implements Runnable {
             outCols;
     private double[][] pids, gaps;
 
-    ScanItFast(String[] mafTab, ArrayList motifs, ArrayList<char[]> alnTab,
+    ScanItFast(ArrayList motifs, ArrayList<char[]> alnTab,
                String[] key, String Path, int GAPS,
                String SSZBINARY, boolean VERBOSE, boolean PRINTALL) {
         this.mafTab = mafTab;

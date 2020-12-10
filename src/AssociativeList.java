@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class AssociativeList {
     private ArrayList<String []>associativeList;
@@ -56,8 +57,6 @@ public class AssociativeList {
                     int[] cordMotif = getRealCoordinates(coordinates2, mafTab);
                     String[] cordMotifString = Arrays.toString(cordMotif).replaceAll("[\\[\\]]", "").split("[\\s*,\\s*]");
                     motifs.put(cordMotifString, associativeList);
-                    String[] endMotif = new String[]{"//"};
-                   //  associativeList.add(endMotif);
                      currentLine =reader.readLine();
                      continue readBlocks;
                 } else {
@@ -76,15 +75,26 @@ public class AssociativeList {
     }
 
     public int[] getRealCoordinates (String[] stockholmCord, String[] mafCord ){
-        String startToMotif = mafCord[6].substring(0, Integer.parseInt(stockholmCord[0]));
-        int startNucMotif = startToMotif.replaceAll("[^ATCGU]", "").length();
-        int nucleicMotifStart = Integer.parseInt(mafCord[2]) + startNucMotif;
-        String seqMotif = (associativeList.get(0))[1];
-        int seqNucl = seqMotif.replaceAll("[^ATCGU]", "").length();
-        int nucleicMotifEnd = nucleicMotifStart +seqNucl;
-        int[] cordFinal = new int[] {nucleicMotifStart,nucleicMotifEnd};
+        int nuc = 0;
+        int [] cordFinal;
+        for (int i = 0; i < Integer.parseInt(stockholmCord[0]); i++ ){
+            char gap = mafCord[6].charAt(i);
+            if (!(gap == '-')){
+                nuc+=1;
+            }
+        }
+        if (mafCord[4].equals("-")){
+            int lociEnd = (Integer.parseInt(mafCord[5] ) + 1  - (Integer.parseInt(mafCord[2]) + nuc)) + 1 ;
+            String motifHuman = associativeList.get(0)[1];
+            int lociStart = lociEnd - motifHuman.replaceAll("[^ATCGUatcgu]", "").length();
+            cordFinal = new int[]{lociStart, lociEnd};
+        } else {
+            int lociStart = Integer.parseInt(mafCord[2]) + nuc;
+            int lociEnd = lociStart + (associativeList.get(0)[1]).length();
+            cordFinal = new int[]{lociStart, lociEnd};
+        }
 
-        return cordFinal;
+           return cordFinal;
     }
     public char[] getAlnTab(String[] seq){
         char[] AlnTab = new char[seq[0].length()];

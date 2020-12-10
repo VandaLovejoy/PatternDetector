@@ -177,7 +177,7 @@ public class MafScanCcr {
 
                                     }
 
-                                    SplitNfold(mafTab, entry.getValue(), alnTab, entry.getKey());
+                                    SplitNfold(mafTabTemp, entry.getValue(), alnTab, entry.getKey());
 
 
                                 }
@@ -221,7 +221,7 @@ public class MafScanCcr {
             if (!(new File(Path)).isDirectory())
                 (new File(Path)).mkdirs();
             List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
-            ScanItFast Block = new ScanItFast(mafTab, value, alnTab, key, Path, GAPS, SSZBINARY, VERBOSE, PRINTALL);
+            ScanItFast Block = new ScanItFast(value, alnTab, key, Path, GAPS, SSZBINARY, VERBOSE, PRINTALL);
              Block.setSsz(SSZ);
              Block.setSszR(SSZR);
             Future f = MultiThreads.submit(Block);
