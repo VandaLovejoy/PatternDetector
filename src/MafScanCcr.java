@@ -131,8 +131,8 @@ public class MafScanCcr {
                  ************************************************************************/
 
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=200"+ " --ribosum_scoring"
-                        + " --aln-stk /home/vanda/chrm21/test2.maf";
-               // executeCommand(cmd);
+                        + " --aln-stk /scratch/vanda/chromosomes/test";
+                executeCommand(cmd);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));

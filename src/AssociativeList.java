@@ -74,7 +74,7 @@ public class AssociativeList {
 
         }
         reader.close();
-       // file.delete();
+        file.delete();
         return motifs;
     }
 
