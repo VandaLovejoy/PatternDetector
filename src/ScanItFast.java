@@ -4,7 +4,6 @@ public class ScanItFast implements Runnable {
     static boolean VERBOSE = false,
             PRINTALL = false;
     private boolean[] hasChars, keepMe, isAmbiguous, isNotUnique;
-    private String[] mafTab;
     private String[] key;
     private ArrayList<String[]> motifs;
     ArrayList<char[]> alnTab;
@@ -33,7 +32,6 @@ public class ScanItFast implements Runnable {
     ScanItFast(ArrayList motifs, ArrayList<char[]> alnTab,
                String[] key, String Path, int GAPS,
                String SSZBINARY, boolean VERBOSE, boolean PRINTALL) {
-        this.mafTab = mafTab;
         this.Path = Path;
         this.SSZBINARY = SSZBINARY;
         this.VERBOSE = VERBOSE;
@@ -53,7 +51,7 @@ public class ScanItFast implements Runnable {
             System.out.println(motifs.size() + " " + alnTab.size());
         }
         isAmbiguous = new boolean[alnTab.size()];
-        int startPos = Integer.parseInt(mafTab[2]);
+        int startPos = Integer.parseInt(key[1]);
         // remove identical rows or those with too many gaps & N's
         Set<String> Uniques = new LinkedHashSet<String>(),
                 UniquesWithGaps = new LinkedHashSet<String>(),
@@ -299,13 +297,9 @@ public class ScanItFast implements Runnable {
         // save BED coords from MAF file
         if (VERBOSE)
             System.out.println("- -> Calculating BED coords ");
-        String BedFile = mafTab[1].substring(mafTab[1].lastIndexOf(".") + 1) + "\t";
-        if (mafTab[4].equals("+")) {
-            BedFile = BedFile + (startPos) + Integer.parseInt(key[0]) + "\t" + (startPos + Integer.parseInt(key[1])) + "\t";
-        } else { // this should only occur in user specified cases
-            BedFile = BedFile + (Integer.parseInt(mafTab[5]) - (startPos + Integer.parseInt(key[0])) - Integer.parseInt(key[1])
-                    + "\t" + (Integer.parseInt(mafTab[5]) - (startPos + Integer.parseInt(key[0]) + 1))) + "\t";
-        }
+        String BedFile = key[0] + "\t";
+        BedFile = BedFile + key[1] + "\t" + key[2] + "\t";
+
         BedFile = BedFile + (int) uniqueSeqs + ":" + ((double) (int) (10 * stats[0]) / 10) + ":"      // MPI
                 + ((double) (int) (10 * stats[5]) / 10) + ":"                      // CLASSIC MPI
                 + ((double) (int) (10 * stats[4]) / 10) + ":"                     // GAPS
@@ -357,7 +351,7 @@ public class ScanItFast implements Runnable {
         }
         String FinalBedFile = "",
                 FinalBedFileRC = "",
-                Antisense = (mafTab[4].equals("+")) ? "-" : "+";
+                Antisense = (key[3].equals("+"))? "-" : "+";
 //***************** 	SISSIz scan & parse		******************
         String[] SissizOutTab = new String[12];
         try {
@@ -379,7 +373,7 @@ public class ScanItFast implements Runnable {
         if (SissizOutTab == null || SissizOutTab[10] == null) {
             Aln.delete();
         } else {
-            FinalBedFile = BedFile + ":" + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + mafTab[4];
+            FinalBedFile = BedFile + ":" + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
             // delete low scoring alignments
             if ((SissizOutTab[1].equals("r") && Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD)
                     || (SissizOutTab[1].equals("s") && Double.parseDouble(SissizOutTab[10]) > SSZ_THRESHOLD)) {

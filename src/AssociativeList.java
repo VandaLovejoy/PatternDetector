@@ -55,10 +55,14 @@ public class AssociativeList {
                         currentLine = reader.readLine();
                     }
                     int[] cordMotif = getRealCoordinates(coordinates2, mafTab);
-                    String[] cordMotifString = Arrays.toString(cordMotif).replaceAll("[\\[\\]]", "").split("[\\s*,\\s*]");
-                    motifs.put(cordMotifString, associativeList);
-                     currentLine =reader.readLine();
-                     continue readBlocks;
+                    String loci = Arrays.toString(cordMotif);
+                    String chrom = mafTab[1].substring((mafTab[1].lastIndexOf("."))+1);
+                    String lociChrm = chrom + ", " + loci.substring(1, loci.length()-1) + ", "+
+                            mafTab[4];
+                    String[] arrayLociChrm = lociChrm.split(", ");
+                    motifs.put(arrayLociChrm, associativeList);
+                    currentLine =reader.readLine();
+                    continue readBlocks;
                 } else {
                    currentLine =reader.readLine();
                     continue readBlocks;
