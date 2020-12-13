@@ -131,7 +131,7 @@ public class MafScanCcr {
                  ************************************************************************/
 
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=200"+ " --ribosum_scoring"
-                        + " --aln-stk /scratch/vanda/chromosomes/test";
+                        + " --aln-stk " + Args[Args.length - 1];
                 executeCommand(cmd);
 
 
