@@ -1,19 +1,17 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class AssociativeList {
     private ArrayList<String []>associativeList;
-    int numbZeros;
+    private int numbZeros;
     // Constructor
     public AssociativeList() { associativeList = new ArrayList<>();}
 
-    public HashMap<String[], ArrayList> addSpecies(String pathFile, int blockAln, String [] mafTab) throws IOException {
+    public HashMap<String[], ArrayList> addSpecies(String pathFile, int blockAln, String [] mafTab,
+                                                   String RSCAPEBINARY) throws IOException, InterruptedException {
+
         HashMap<String[], ArrayList> motifs = new HashMap<>();
         String lastDigit = "";
         String finalName = "";
@@ -26,62 +24,74 @@ public class AssociativeList {
         }
         finalName += lastDigit;
 
-        File file = new File(pathFile + "alifold_" + finalName + ".stk");
+        File file = new File(pathFile +"/stockholm" + "/alifold_" + finalName + ".stk");
+        rScape(file, RSCAPEBINARY, pathFile);
 
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        String currentLine = reader.readLine();
-        readBlocks:
-        while (currentLine != null ) {
+        String endFileName = ".fold.sto";
+        File dir = new File(pathFile + "/R-Scape");
+        File[] matchingFiles = dir.listFiles((dir1, name) -> name.endsWith(endFileName));
 
-            if (currentLine.length() != 2 && currentLine.substring(0, 7).equals("#=GF ID")) {
-                String[] coordinates = currentLine.split("_");
-                int begCord = Integer.parseInt(coordinates[4]);
-                int endCord = Integer.parseInt(coordinates[3]);
-                int lengthSeq = begCord - endCord;
-                if (lengthSeq >= 50) {
+
+        try {
+            int v = 0;
+            String fileName;
+            while (v < matchingFiles.length) {
+                fileName = matchingFiles[v].getName();
+                String[] arrayName = fileName.split("[_.]");
+                int lengthAln = Integer.parseInt(arrayName[4]) - Integer.parseInt(arrayName[3]);
+                if (!(lengthAln < 50)) {
                     associativeList = new ArrayList<>();
-                    String[] coordinates2 = new String[2];
-                    coordinates2[0]= coordinates[3];
-                    coordinates2[1]= coordinates[4];
-                    currentLine = reader.readLine();
-                    currentLine = reader.readLine();
+                    BufferedReader reader = new BufferedReader(new FileReader(matchingFiles[v]));
+                    String currentLine = reader.readLine();
 
-                    while (currentLine.charAt(0) != '#') {
-                        String[] species = currentLine.split(" ", 2);
-                        species[1]=species[1].trim();
 
-                        associativeList.add(species);
+
+                    readBlocks:
+                    while (currentLine != null) {
+                        if (currentLine.startsWith("#") || currentLine.equals("") || currentLine.startsWith("//")) {
+                            currentLine = reader.readLine();
+                            continue readBlocks;
+                        } else {
+
+                            String[] species = currentLine.split(" ", 2);
+                            species[1] = species[1].trim();
+
+                            associativeList.add(species);
+                        }
 
                         currentLine = reader.readLine();
+                        continue readBlocks;
+
+
                     }
-                    int[] cordMotif = getRealCoordinates(coordinates2, mafTab);
+
+                    int[] cordMotif = getRealCoordinates(Integer.parseInt(arrayName[3]), mafTab);
                     String loci = Arrays.toString(cordMotif);
-                    String chrom = mafTab[1].substring((mafTab[1].lastIndexOf("."))+1);
-                    String lociChrm = chrom + ", " + loci.substring(1, loci.length()-1) + ", "+
-                            mafTab[4];
+                    String chrom = mafTab[1].substring((mafTab[1].lastIndexOf(".")) + 1);
+                    String lociChrm = chrom + ", " + loci.substring(1, loci.length() - 1) + ", " +
+                            mafTab[4] + ", " + arrayName[3] + ", " + arrayName[4];
                     String[] arrayLociChrm = lociChrm.split(", ");
                     motifs.put(arrayLociChrm, associativeList);
-                    currentLine =reader.readLine();
-                    continue readBlocks;
-                } else {
-                   currentLine =reader.readLine();
-                    continue readBlocks;
+                    reader.close();
                 }
-            } else {
-                currentLine =reader.readLine();
-                continue readBlocks;
-            }
 
+                v += 1;
+            }
+             file.delete();
+
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
-        reader.close();
-        file.delete();
+
         return motifs;
     }
 
-    public int[] getRealCoordinates (String[] stockholmCord, String[] mafCord ){
+    public int[] getRealCoordinates (int start, String[] mafCord ){
         int nuc = 0;
         int [] cordFinal;
-        for (int i = 0; i < Integer.parseInt(stockholmCord[0]); i++ ){
+        for (int i = 0; i < start; i++ ){
             char gap = mafCord[6].charAt(i);
             if (!(gap == '-')){
                 nuc+=1;
@@ -109,4 +119,19 @@ public class AssociativeList {
 
     }
 
+    private void rScape(File stockholmFile, String RSCAPEBINARY, String path)throws IOException,
+            InterruptedException {
+        String pathway = path + "/R-Scape";
+        if (!(new File(pathway)).isDirectory())
+            (new File(pathway)).mkdirs();
+
+                String cmd = RSCAPEBINARY + " --fold" + " --nofigures "
+                + stockholmFile;
+        Process process = Runtime.getRuntime().exec(cmd, null, new File(pathway));
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(process.getInputStream()));
+        while ((reader.readLine()) != null) {
+        }
+        process.waitFor();
+    }
 }

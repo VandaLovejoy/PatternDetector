@@ -7,8 +7,7 @@ public class ScanItFast implements Runnable {
     private String[] key;
     private ArrayList<String[]> motifs;
     ArrayList<char[]> alnTab;
-    // private char[][] AlnTab;
-    private static String Path, SSZBINARY, ALIFOLDBINARY;
+    private static String Path, dirPath, SSZBINARY, RSCAPEBINARY;
     private int[] coordTab;
     private int goodSeqs, iterate, GAPS, retainedColumns;
     private BufferedWriter WriteALN;
@@ -25,15 +24,16 @@ public class ScanItFast implements Runnable {
             uniqueSeqs,
             SSZ_THRESHOLD = -2.7,        // alignments scoring below this will be kept (Z-score)
             SSZR_THRESHOLD = -2.2,        // alignments scoring below this will be kept (Z-score)
-            RNAZ_THRESHOLD = 0.32,    // alignments scoring above this will be kept (SVM probability)
             outCols;
     private double[][] pids, gaps;
 
     ScanItFast(ArrayList motifs, ArrayList<char[]> alnTab,
-               String[] key, String Path, int GAPS,
+               String[] key, String Path, String dirPath, int GAPS,
                String SSZBINARY, boolean VERBOSE, boolean PRINTALL) {
         this.Path = Path;
+        this.dirPath = dirPath;
         this.SSZBINARY = SSZBINARY;
+        this.RSCAPEBINARY = RSCAPEBINARY;
         this.VERBOSE = VERBOSE;
         this.PRINTALL = PRINTALL;
         this.alnTab = alnTab;
@@ -282,19 +282,64 @@ public class ScanItFast implements Runnable {
         stats[2] = -1 * shanon / ((double) outCols);                                                        // Normalized Shanon entropy
         stats[3] = 100 * (totalChars[2] + totalChars[3]) / (totalChars[0] + totalChars[1] + totalChars[2] + totalChars[3]);       // GC content
         stats[4] = 100 * totalChars[4] / (outCols * uniqueSeqs);                                          // GAP content
-        // System.out.println( stats[0]+"\t"+(Math.sqrt(stats[1]))+"\t"+stats[2]+"\t"+stats[3]+"\t"+stats[4]) ; 	 // print stats
-       /* try(FileWriter fw = new FileWriter("/home/vanda/Documents/test5.txt", true);
-            BufferedWriter WriteClustal = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(WriteClustal))
-        {
-            out.println(stats[0]);
 
-        } catch (IOException e){
+        //*********************************************************************
+        //					R-scape scan & parse						*
+        //*********************************************************************
+        ///***************** 	R-scape scan & parse		******************
+        String endFileName = "" + key[4] + "_" + key[5] + ".fold.power";
+        File f = new File(dirPath+ "/R-Scape");
+        File[] matchingFiles = f.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return  name.endsWith(endFileName);
+            }
+        });
+
+        String totalBasePairs = "";
+        String expectedCovary = "";
+        String observedCovary = "";
+
+        try {
+            Scanner scanner = new Scanner(matchingFiles[0]);
+
+            //now read the file line by line...
+            int lineNum = 0;
+            int counter = 0;
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                lineNum++;
+
+                if (line.startsWith("# BPAIRS expected to covary")) {
+                    expectedCovary = line;
+
+                } else if (line.startsWith("# BPAIRS observed to covary")) {
+                    observedCovary = line;
+
+                }else if (counter == 5) {
+                    totalBasePairs = line;
+                    counter ++;
+
+                } else if (line.startsWith("#")) {
+                    counter++;
+
+                }
+            }
+
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-            return;
-        }*/
+        }
+        String [] expCov= expectedCovary.split(" ");
+        String [] totalBP = totalBasePairs.split(" ");
+        String [] obsCov = observedCovary.split(" ");
+        double covExp = Double.parseDouble(expCov[5]);
+        double totalBasePair = Double.parseDouble(totalBP[totalBP.length - 1 ]);
+        double observCov = Double.parseDouble(obsCov[obsCov.length - 1 ]);
+        double percentAlignPower = covExp/totalBasePair * 100;
+        double bpCovary = observCov/totalBasePair * 100;
 
-        // save BED coords from MAF file
+
+
+        // save BED coords
         if (VERBOSE)
             System.out.println("- -> Calculating BED coords ");
         String BedFile = key[0] + "\t";
@@ -305,7 +350,10 @@ public class ScanItFast implements Runnable {
                 + ((double) (int) (10 * stats[4]) / 10) + ":"                     // GAPS
                 + ((double) (int) (10 * Math.sqrt(stats[1])) / 10) + ":"            // STDEV
                 + ((double) (int) (100 * stats[2]) / 100) + ":"                // SHANON
-                + ((double) (int) (10 * stats[3]) / 10);                   //      GC
+                + ((double) (int) (10 * stats[3]) / 10) + ":"                  //      GC
+                + percentAlignPower + ":"
+                + bpCovary + ":"
+                + totalBasePair;
         if (VERBOSE)
             System.out.println("Pre SISSIz bed file: \n" + " " + BedFile);
 
@@ -313,7 +361,8 @@ public class ScanItFast implements Runnable {
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
-        if (outCols > (FilteredTab[0].length()) / 2 && uniqueSeqs > 2 && stats[4] <= 75 && stats[0] > 80) {
+        if (outCols > (FilteredTab[0].length()) / 2 && uniqueSeqs > 2 && stats[4] <= 75 && stats[0] > 60 &&
+                totalBasePair != 0.0 && !(percentAlignPower > 10 && bpCovary < 2)) {
             // Write Sequences to ALN Format
             try {
                 BufferedWriter WriteClustal = new BufferedWriter(new FileWriter( Aln )),
@@ -352,10 +401,12 @@ public class ScanItFast implements Runnable {
         String FinalBedFile = "",
                 FinalBedFileRC = "",
                 Antisense = (key[3].equals("+"))? "-" : "+";
+
+
 //***************** 	SISSIz scan & parse		******************
         String[] SissizOutTab = new String[12];
         try {
-            SissizOutTab = ScanSSZ(Path, BedFile, stats, 1, random);
+            SissizOutTab = ScanSSZ(Path, BedFile, 1, random);
             if (SissizOutTab == null) { // timeout
                 Aln.delete();
             }
@@ -395,7 +446,7 @@ public class ScanItFast implements Runnable {
         }
         // * * * * * *  now for the RC  * * * * * *
         try {
-            SissizOutTab = ScanSSZ(Path, BedFile + "rc", stats, 1, random);
+            SissizOutTab = ScanSSZ(Path, BedFile + "rc",  1, random);
             if (SissizOutTab == null) {
                 AlnRC.delete();
             }
@@ -435,13 +486,14 @@ public class ScanItFast implements Runnable {
         }
        // Aln.delete() ;
        // AlnRC.delete() ;
-    }
 
+
+    }
         //*********************************************************************
         //					SISSIz scan & parse						*
         //*********************************************************************
         // sissiz-di       cluster.109999_step.aln  8       150     0.8759  0.8542  0.0094  -13.88  -8.20   3.48    -1.63
-        protected static String[] ScanSSZ (String Path, String BedFile,double[] stats, int counter, int id ) throws
+        protected static String[] ScanSSZ (String Path, String BedFile, int counter, int id ) throws
         IOException {
             //stats[0] Mean Pairwise ID
             //stats[1] Variance
@@ -453,17 +505,7 @@ public class ScanItFast implements Runnable {
             String Output = "", Error = "";
             String Command = SSZBINARY;
             double threshold = 60; // threshold on statistic for SISSIz vs SISSIz-RIBOSUM selection
-/*		switch ( counter ) {
-			case 1:
-				Command = Command + " -f 500 -p 0.05" ;
-				break;
-			case 2:
-				Command = Command + " -j -f 500 -p 0.05" ;
-				break;
-			default:
-				break;
-		}
-*/
+
           //  if (stats[5] < threshold || stats[3] >= 70) {
                 counter = 2;
                 Command = Command + " -j " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id; // RIBOSUM scoring

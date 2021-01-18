@@ -20,8 +20,10 @@ public class MafScanCcr {
     static String
             FILENAME = "",
             OUT_PATH = "",
+            dirProgram = "",
             SSZBINARY = "/usr/bin/SISSIz",
-            ALIFOLDBINARY = "~/usr/local/bin/RNALalifold";
+            ALIFOLDBINARY = "~/usr/local/bin/RNALalifold",
+            RSCAPEBINARY = "/usr/bin/R-scape";
 
     static double
             SSZ = -2.7,
@@ -84,6 +86,20 @@ public class MafScanCcr {
             System.exit(0);
         }
 
+        GetBinary = Runtime.getRuntime().exec("which SISSIz") ;
+        ReadBin = new BufferedReader(new InputStreamReader(GetBinary.getInputStream()));
+        if ( (SSZBINARY = ReadBin.readLine() ) == null ) {
+            System.out.println("Please install SISSIz (version 2.0), and link it to your $PATH" );
+            System.exit(0);
+        }
+
+        GetBinary = Runtime.getRuntime().exec("which R-scape") ;
+        ReadBin = new BufferedReader(new InputStreamReader(GetBinary.getInputStream()));
+        if ( (RSCAPEBINARY = ReadBin.readLine() ) == null ) {
+            System.out.println("Please install R-scape, and link it to your $PATH" );
+            System.exit(0);
+        }
+
         ReadBin.close();
 
         // parse arguments
@@ -103,6 +119,7 @@ public class MafScanCcr {
                     (new File(OUT_PATH)).mkdirs();
                 if (VERBOSE)
                     System.out.println("writing alignments to directory " + OUT_PATH);
+                dirProgram = System.getProperty("user.dir");
                 i++;
             } else if (Args[i].equals("-all")) { // step size
                 PRINTALL = true;
@@ -158,14 +175,15 @@ public class MafScanCcr {
 
                             if (Temp.split("@").length >= 3) { // at least 3 sequences
                                 TempTab = new String[Temp.split("@").length];
-                                TempTab = Temp.split("@");
-                                Temp = "";
+                                TempTab = Temp.split("@");Temp = "";
+                                
                                 AssociativeList species = new AssociativeList();
                                 mafTabTemp = TempTab[0].split("\\s+");
 
 
 
-                                HashMap<String[], ArrayList> motifs = species.addSpecies(OUT_PATH + "/stockholm/", blockAln, mafTabTemp);
+                                HashMap<String[], ArrayList> motifs = species.addSpecies(dirProgram + "/" + OUT_PATH,
+                                        blockAln, mafTabTemp, RSCAPEBINARY);
                                 for (HashMap.Entry<String[], ArrayList> entry : motifs.entrySet()) {
                                     Iterator iter = entry.getValue().iterator();
                                     ArrayList<char[]> alnTab = new ArrayList<>();
@@ -181,6 +199,13 @@ public class MafScanCcr {
 
 
                                 }
+                                File index = new File(dirProgram + "/"+ OUT_PATH +"/R-Scape");
+                                String[] entriesRscape = index.list();
+                                for (String s: entriesRscape){
+                                    File currentFile = new File(index.getPath(), s);
+                                    currentFile.delete();
+                                }
+
                                 blockAln ++;
                             } else if (Temp.split("@").length == 2) {
                                 blockAln ++;
@@ -221,9 +246,10 @@ public class MafScanCcr {
             if (!(new File(Path)).isDirectory())
                 (new File(Path)).mkdirs();
             List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
-            ScanItFast Block = new ScanItFast(value, alnTab, key, Path, GAPS, SSZBINARY, VERBOSE, PRINTALL);
-             Block.setSsz(SSZ);
-             Block.setSszR(SSZR);
+            ScanItFast Block = new ScanItFast(value, alnTab, key, Path, dirProgram + "/" + OUT_PATH, GAPS,
+                    SSZBINARY, VERBOSE, PRINTALL);
+            Block.setSsz(SSZ);
+            Block.setSszR(SSZR);
             Future f = MultiThreads.submit(Block);
             futures.add(f);
             for (Future<Runnable> g : futures) {
@@ -242,11 +268,11 @@ public class MafScanCcr {
     private static void executeCommand(final String command) throws IOException,
             InterruptedException {
 
-        String Path = OUT_PATH + "/stockholm/";
+        String Path = dirProgram + "/" + OUT_PATH + "/stockholm";
         if (!(new File(Path)).isDirectory())
             (new File(Path)).mkdirs();
         System.out.println("Executing command " + command);
-        Process process = Runtime.getRuntime().exec(command,null, new File("/home/vanda/Downloads/PatternDetector/TEST/stockholm"));
+        Process process = Runtime.getRuntime().exec(command,null, new File(Path));
 
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(process.getInputStream()));
