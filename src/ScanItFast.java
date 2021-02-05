@@ -29,7 +29,7 @@ public class ScanItFast implements Runnable {
 
     ScanItFast(ArrayList motifs, ArrayList<char[]> alnTab,
                String[] key, String Path, String dirPath, int GAPS,
-               String SSZBINARY, boolean VERBOSE, boolean PRINTALL) {
+               String SSZBINARY, String RSCAPEBINARY, boolean VERBOSE, boolean PRINTALL) {
         this.Path = Path;
         this.dirPath = dirPath;
         this.SSZBINARY = SSZBINARY;
@@ -110,7 +110,7 @@ public class ScanItFast implements Runnable {
         retainedColumns = FilteredTab[0].length();
         hasChars = new boolean[FilteredTab[0].length()];
         gapScan:
-        for (int col = 0; col < FilteredTab[0].length() - 1; col++) {
+        for (int col = 0; col < FilteredTab[0].length(); col++) {
             for (int seq = 0; seq != FilteredTab.length; seq++) {
                 if (keepMe[seq]) {
                     if (FilteredTab[seq].charAt(col) == 'A' || FilteredTab[seq].charAt(col) == 'C'
@@ -135,8 +135,9 @@ public class ScanItFast implements Runnable {
         for (int seq = 0; seq != FilteredTab.length; seq++) { //removed x < goodseqs
             if (keepMe[seq]) {
                 OutAln[iterate] = NameTab[seq].substring(0, Math.min(NameTab[seq].length(), 20));
-                for (int i = 0; i != 25 - Math.min(NameTab[seq].length(), 20); i++)
+                for (int i = 0; i != 25 - Math.min(NameTab[seq].length(), 20); i++) {
                     OutAln[iterate] = OutAln[iterate] + " ";
+                }
                 for (int i = 0; i != FilteredTab[0].length(); i++)
                     if (hasChars[i])
                         OutAln[iterate] = OutAln[iterate] + FilteredTab[seq].charAt(i);
@@ -287,7 +288,54 @@ public class ScanItFast implements Runnable {
         //					R-scape scan & parse						*
         //*********************************************************************
         ///***************** 	R-scape scan & parse		******************
-        String endFileName = "" + key[4] + "_" + key[5] + ".fold.power";
+        // Write Sequences to Stockholm Format
+        File dir = new File(dirPath + "/R-Scape");
+        if (!dir.exists()){
+            dir.mkdir();
+        }
+        String stkName =  key[1] + "_" + key[2] + ".stk";
+        File stkFile = new File(dir + "/" + stkName);
+
+
+        try {
+            BufferedWriter WriteStockholm = new BufferedWriter(new FileWriter( stkFile ));
+            WriteStockholm.write("# STOCKHOLM 1.0\n") ;
+
+            for ( int y = 0 ; y != goodSeqs ; y++ ) {
+                if ( !isNotUnique[ y ] ) {
+                    WriteStockholm.write( OutAln[ y ] ) ;
+                }
+            }
+            String gcRef = "#=GC RF "+ key[6] + "\n";
+
+            String  gcSScon =  "#=GC SS_cons " +key[7] + "\n";
+
+            WriteStockholm.write(gcRef);
+            WriteStockholm.write(gcSScon);
+            WriteStockholm.write("//" +"\n");
+
+
+            WriteStockholm.close() ;
+        } catch (IOException Fuck) {
+            if (VERBOSE)
+                System.err.println("couldn't write stockholm file");
+            Fuck.printStackTrace();
+            stkFile.delete() ;
+            return;
+        }
+
+
+        try {
+            rScape(stkFile, RSCAPEBINARY, dirPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+
+        String endFileName = ".fold.power";
         File f = new File(dirPath+ "/R-Scape");
         File[] matchingFiles = f.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -337,6 +385,12 @@ public class ScanItFast implements Runnable {
         double percentAlignPower = covExp/totalBasePair * 100;
         double bpCovary = observCov/totalBasePair * 100;
 
+       //Delete file with R-scape info
+        String[] entries = dir.list();
+        for(String s:entries){
+            File currentFile = new File (dir.getPath(),s);
+            currentFile.delete();
+        }
 
 
         // save BED coords
@@ -488,6 +542,26 @@ public class ScanItFast implements Runnable {
        // AlnRC.delete() ;
 
 
+    }
+
+
+//*********************************************************************
+    //					Rscape scan & parse						*
+    //*********************************************************************
+
+
+    private void rScape(File stockholmFile, String RSCAPEBINARY, String path)throws IOException,
+            InterruptedException {
+        String pathway = path + "/R-Scape";
+
+        String cmd = RSCAPEBINARY + " --fold" + " --nofigures "
+                + stockholmFile;
+        Process process = Runtime.getRuntime().exec(cmd, null, new File(pathway));
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(process.getInputStream()));
+        while ((reader.readLine()) != null) {
+        }
+        process.waitFor();
     }
         //*********************************************************************
         //					SISSIz scan & parse						*

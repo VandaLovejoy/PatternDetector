@@ -149,7 +149,7 @@ public class MafScanCcr {
 
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=200"+ " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
-                executeCommand(cmd);
+               // executeCommand(cmd);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -183,7 +183,7 @@ public class MafScanCcr {
 
 
                                 HashMap<String[], ArrayList> motifs = species.addSpecies(dirProgram + "/" + OUT_PATH,
-                                        blockAln, mafTabTemp, RSCAPEBINARY);
+                                        blockAln, mafTabTemp);
                                 for (HashMap.Entry<String[], ArrayList> entry : motifs.entrySet()) {
                                     Iterator iter = entry.getValue().iterator();
                                     ArrayList<char[]> alnTab = new ArrayList<>();
@@ -247,7 +247,7 @@ public class MafScanCcr {
                 (new File(Path)).mkdirs();
             List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
             ScanItFast Block = new ScanItFast(value, alnTab, key, Path, dirProgram + "/" + OUT_PATH, GAPS,
-                    SSZBINARY, VERBOSE, PRINTALL);
+                    SSZBINARY, RSCAPEBINARY, VERBOSE, PRINTALL);
             Block.setSsz(SSZ);
             Block.setSszR(SSZR);
             Future f = MultiThreads.submit(Block);
