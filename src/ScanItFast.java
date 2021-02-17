@@ -149,10 +149,9 @@ public class ScanItFast implements Runnable {
 //*********************************************************************
         //					calculate stats						*
         //*********************************************************************
-
-        double total = 0.0;
         if (VERBOSE)
             System.out.println("- - -> calculating statistics");
+       double mpiTEST =0.0;
         uniqueSeqs = goodSeqs;
         outCols = OutAln[0].length() - 25; //change last variable if CLUSTAL properties changes
         stats = new double[6];
@@ -165,6 +164,7 @@ public class ScanItFast implements Runnable {
         for (int k = 25; k != OutAln[0].length() - 1; k++) { // -1 avoids line break char, 25 is clustal seq ID length
             lines:
             for (int i = 0; i != goodSeqs; i++) {
+                double sum=0.0;
                 // initiate gaps[] and pids[] to 0 ???????????????????????
                 if (isNotUnique[i])
                     continue lines;
@@ -286,6 +286,7 @@ public class ScanItFast implements Runnable {
         stats[2] = -1 * shanon / ((double) outCols);                                                        // Normalized Shanon entropy
         stats[3] = 100 * (totalChars[2] + totalChars[3]) / (totalChars[0] + totalChars[1] + totalChars[2] + totalChars[3]);       // GC content
         stats[4] = 100 * totalChars[4] / (outCols * goodSeqs);                                          // GAP content
+/*
 
         //*********************************************************************
         //					R-scape scan & parse						*
@@ -377,6 +378,7 @@ public class ScanItFast implements Runnable {
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return;
         }
         String [] expCov= expectedCovary.split(" ");
         String [] totalBP = totalBasePairs.split(" ");
@@ -400,6 +402,7 @@ public class ScanItFast implements Runnable {
             File currentFile = new File (dir.getPath(),s);
             currentFile.delete();
         }
+*/
 
 
         // save BED coords
@@ -413,10 +416,10 @@ public class ScanItFast implements Runnable {
                 + ((double) (int) (10 * stats[4]) / 10) + ":"                     // GAPS
                 + ((double) (int) (10 * Math.sqrt(stats[1])) / 10) + ":"            // STDEV
                 + ((double) (int) (100 * stats[2]) / 100) + ":"                // SHANON
-                + ((double) (int) (10 * stats[3]) / 10) + ":"                  //      GC
-                + (double) (int) percentAlignPower + ":"
-                + (double) (int) bpCovary + ":"
-                + (double) (int) totalBasePair;
+                + ((double) (int) (10 * stats[3]) / 10) + ":";                  //      GC
+               // + (double) (int) percentAlignPower + ":"
+               // + (double) (int) bpCovary + ":"
+              //  + (double) (int) totalBasePair;
         if (VERBOSE)
             System.out.println("Pre SISSIz bed file: \n" + " " + BedFile);
 
@@ -424,8 +427,9 @@ public class ScanItFast implements Runnable {
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
-        if (outCols > (FilteredTab[0].length()) / 2 && stats[4] <= 75 && stats[0] > 60 &&
-                totalBasePair != 0.0 && !(percentAlignPower > 10 && bpCovary < 2)) {
+        if (outCols > (FilteredTab[0].length()) / 2 && stats[4] <= 75 && stats[0] > 60) {
+            //totalBasePair != 0.0 && !(percentAlignPower > 10 && bpCovary < 2)
+
             // Write Sequences to ALN Format
             try {
                 BufferedWriter WriteClustal = new BufferedWriter(new FileWriter( Aln )),

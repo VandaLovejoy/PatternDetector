@@ -31,6 +31,7 @@ public class MafScanCcr {
 
 
     public static synchronized void main(String[] Args) throws IOException, InterruptedException {
+
         // variables
         String[] mafTab;
         String[] mafTabTemp;
@@ -149,8 +150,10 @@ public class MafScanCcr {
 
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=200"+ " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
+                long startTime = System.nanoTime();
                 executeCommand(cmd);
-
+                long endTime = System.nanoTime();
+                System.out.println("That took"+ (endTime-startTime) +" for RNALalifold to create file in nanoseconds");
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
                 TempTab = new String[lineCount]; // 7 maf columns
@@ -199,13 +202,13 @@ public class MafScanCcr {
 
 
                                 }
-                                File index = new File(dirProgram + "/"+ OUT_PATH +"/R-Scape");
+                                /*File index = new File(dirProgram + "/"+ OUT_PATH +"/R-Scape");
                                 String[] entriesRscape = index.list();
                                 for (String s: entriesRscape){
                                     File currentFile = new File(index.getPath(), s);
                                     currentFile.delete();
                                 }
-
+*/
                                 blockAln ++;
                             } else if (Temp.split("@").length == 2) {
                                 blockAln ++;
@@ -229,7 +232,11 @@ public class MafScanCcr {
 
             }
         }
+
+
+
     }
+
 
 
 
