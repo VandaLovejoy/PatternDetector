@@ -31,7 +31,7 @@ public class MafScanCcr {
 
 
     public static synchronized void main(String[] Args) throws IOException, InterruptedException {
-
+        long startTime = System.nanoTime();
         // variables
         String[] mafTab;
         String[] mafTabTemp;
@@ -150,10 +150,9 @@ public class MafScanCcr {
 
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=200"+ " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
-                long startTime = System.nanoTime();
+
                 executeCommand(cmd);
-                long endTime = System.nanoTime();
-                System.out.println("That took"+ (endTime-startTime) +" for RNALalifold to create file in nanoseconds");
+
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
                 TempTab = new String[lineCount]; // 7 maf columns
@@ -187,7 +186,7 @@ public class MafScanCcr {
 
                                 HashMap<String[], ArrayList> motifs = species.addSpecies(dirProgram + "/" + OUT_PATH,
                                         blockAln, mafTabTemp);
-                                for (HashMap.Entry<String[], ArrayList> entry : motifs.entrySet()) {
+                                /*for (HashMap.Entry<String[], ArrayList> entry : motifs.entrySet()) {
                                     Iterator iter = entry.getValue().iterator();
                                     ArrayList<char[]> alnTab = new ArrayList<>();
                                     while (iter.hasNext()) {
@@ -201,7 +200,7 @@ public class MafScanCcr {
                                     SplitNfold(mafTabTemp, entry.getValue(), alnTab, entry.getKey());
 
 
-                                }
+                                }*/
                                 /*File index = new File(dirProgram + "/"+ OUT_PATH +"/R-Scape");
                                 String[] entriesRscape = index.list();
                                 for (String s: entriesRscape){
@@ -219,7 +218,7 @@ public class MafScanCcr {
 
 
 
-                              //
+
 
 
                             Temp = "";
@@ -234,7 +233,8 @@ public class MafScanCcr {
         }
 
 
-
+        long endTime = System.nanoTime();
+        System.out.println("That took"+ (endTime-startTime) +" for progrom to finish in nanoseconds");
     }
 
 
@@ -243,7 +243,7 @@ public class MafScanCcr {
     //*********************************************************************
     //						scan and parse windows				*
     //*********************************************************************
-    private static synchronized boolean SplitNfold(String[] mafTab, ArrayList value, ArrayList<char[]> alnTab,
+    protected static synchronized boolean SplitNfold(String[] mafTab, ArrayList value, ArrayList<char[]> alnTab,
                                                    String[] key) throws IOException {
         ExecutorService MultiThreads = Executors.newFixedThreadPool(NTHREDS);
         try {

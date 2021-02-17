@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class AssociativeList {
     private ArrayList<String []>associativeList;
@@ -70,7 +71,17 @@ public class AssociativeList {
                                     mafTab[4] + ", " + arrayName[3] + ", " + arrayName[4]+ ", " + gcReference + ", "
                                     +gcSScons;
                             String[] arrayLociChrm = lociChrm.split(", ");
-                            motifs.put(arrayLociChrm, associativeList);
+                           // motifs.put(arrayLociChrm, associativeList);
+
+                                Iterator iter = associativeList.iterator();
+                                ArrayList<char[]> alnTab = new ArrayList<>();
+                                while (iter.hasNext()) {
+                                    String[] line = (String[]) iter.next();
+                                    char[] aln = line[1].toCharArray();
+                                    alnTab.add(aln);
+                                }
+
+                                MafScanCcr.SplitNfold(mafTab, associativeList, alnTab, arrayLociChrm);
                         }
                         currentLine = reader.readLine();
                         continue readBlocks;
