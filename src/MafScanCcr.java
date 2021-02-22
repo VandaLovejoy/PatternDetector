@@ -25,9 +25,7 @@ public class MafScanCcr {
             ALIFOLDBINARY = "~/usr/local/bin/RNALalifold",
             RSCAPEBINARY = "/usr/bin/R-scape";
 
-    static double
-            SSZ = -2.7,
-            SSZR = -2.2;
+    static double SSZR = -3;
 
 
     public static synchronized void main(String[] Args) throws IOException, InterruptedException {
@@ -265,12 +263,12 @@ public class MafScanCcr {
                                                 alnTab.add(aln);
                                             }
 
-                                            /*ScanItFast Block = new ScanItFast( associativeList, alnTab,
-                                                    arrayLociChrm,Path,dirProgram + "/" + OUT_PATH, GAPS, SSZBINARY, RSCAPEBINARY, VERBOSE, PRINTALL);*/
-                                            /*Block.setSsz(SSZ);
-                                            Block.setSszR(SSZR);*/
-                                            Future f = MultiThreads.submit(new ScanItFast( associativeList, alnTab,
-                                                    arrayLociChrm,Path,dirProgram + "/" + OUT_PATH, GAPS, SSZBINARY, RSCAPEBINARY, VERBOSE, PRINTALL));
+                                            ScanItFast aln = new ScanItFast( associativeList, alnTab,
+                                                    arrayLociChrm,Path,dirProgram + "/" + OUT_PATH, GAPS,
+                                                    SSZBINARY, RSCAPEBINARY, VERBOSE, PRINTALL);
+                                            aln.setSszR(SSZR);
+
+                                            Future f = MultiThreads.submit(aln);
                                             futures.add(f);
                                         }
                                         currentLine = reader.readLine();
@@ -317,7 +315,6 @@ public class MafScanCcr {
                         Temp = "";
                     }
                 }
-                // Wait until all threads are finished
             }
 
 
@@ -371,40 +368,6 @@ public class MafScanCcr {
 
     }
 
-
-
-
-
-    //*********************************************************************
-    //						scan and parse windows				*
-    //*********************************************************************
-    protected static synchronized boolean SplitNfold(String[] mafTab, ArrayList value, ArrayList<char[]> alnTab,
-                                                   String[] key) throws IOException {
-        ExecutorService MultiThreads = Executors.newFixedThreadPool(NTHREDS);
-        try {
-            // check if dir exists
-            // add Path Flag ? < < < < < < < < < < < < < < < < < < < < < < < < < < < < <
-            String Path = OUT_PATH + "/aln/" + mafTab[1].substring(mafTab[1].lastIndexOf(".") + 1);
-            if (!(new File(Path)).isDirectory())
-                (new File(Path)).mkdirs();
-            List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
-            ScanItFast Block = new ScanItFast(value, alnTab, key, Path, dirProgram + "/" + OUT_PATH, GAPS,
-                    SSZBINARY, RSCAPEBINARY, VERBOSE, PRINTALL);
-            Block.setSsz(SSZ);
-            Block.setSszR(SSZR);
-            Future f = MultiThreads.submit(Block);
-            futures.add(f);
-            for (Future<Runnable> g : futures) {
-                g.get();
-            }
-            MultiThreads.shutdown();
-            MultiThreads.awaitTermination(60 * 10L, TimeUnit.SECONDS);
-        } catch (Exception Fuck) {
-            System.err.println("MultiThreads took too long!  OOps!");
-            Fuck.printStackTrace();
-        }
-        return true;
-    }
 
 
     private static void executeCommand(final String command) throws IOException,

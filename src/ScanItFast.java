@@ -22,7 +22,6 @@ public class ScanItFast implements Runnable {
             shanon = 0,
             uniqueComps = 0,
             uniqueSeqs,
-            SSZ_THRESHOLD = -2.7,        // alignments scoring below this will be kept (Z-score)
             SSZR_THRESHOLD = -2.2,        // alignments scoring below this will be kept (Z-score)
             outCols;
     private double[][] pids, gaps;
@@ -65,6 +64,7 @@ public class ScanItFast implements Runnable {
                 UniquesWithGaps.add(new String(alnTab.get(seq)).toUpperCase());
             }
         }
+
         FilteredTab = new String[UniquesWithGaps.size()]; // creating an Array from Hash
         FilteredTab = UniquesWithGaps.toArray(FilteredTab);
         NameTab = new String[UniquesWithGaps.size()];
@@ -90,8 +90,6 @@ public class ScanItFast implements Runnable {
             } else {
                 keepMe[seq] = false;
                 goodSeqs--;
-                //if (VERBOSE)
-                //	System.out.println("  --> removed a GAPpy sequence form the alignment" ) ;
             }
 
         }
@@ -123,8 +121,6 @@ public class ScanItFast implements Runnable {
             }
             if (!hasChars[col])
                 retainedColumns--;
-            //if ( !hasChars[ col ] && VERBOSE)
-            //	System.out.println( "-> empty col!" );
         }
 
         // prepare clustalw file
@@ -213,7 +209,7 @@ public class ScanItFast implements Runnable {
                             // classical average identity
                             mpi2 = mpi2 + 100 * pids[i][j] / Math.min(OutAln[i].replaceAll("[^ATCGU]", "").length(),
                                     OutAln[j].replaceAll("[^ATCGU]", "").length());
-                        //}
+
                     }
                 }
             }
@@ -275,7 +271,7 @@ public class ScanItFast implements Runnable {
             for (int z = 0; z != 5; z++)
                 shanon = (chars[z] == 0) ? shanon + 0 : shanon + chars[z] / uniqueSeqs * (Math.log(chars[z] / uniqueSeqs) / Math.log(2));
         }
-        //System.out.println( uniqueSeqs +"\t"+goodSeqs+"\t"+outCols+"\t"+totalChars[4]+"\t"+( outCols * goodSeqs));
+       // System.out.println( uniqueSeqs +"\t"+goodSeqs+"\t"+outCols+"\t"+totalChars[4]+"\t"+( outCols * goodSeqs));
         stats[0] = mpi / uniqueComps;                                                                        // Mean Pairwise ID
         stats[5] = mpi2 / uniqueComps;                                                                    // classical MPI
         for (int seq1 = 0; seq1 != goodSeqs; seq1++)
@@ -416,13 +412,13 @@ public class ScanItFast implements Runnable {
                 + ((double) (int) (10 * stats[4]) / 10) + ":"                     // GAPS
                 + ((double) (int) (10 * Math.sqrt(stats[1])) / 10) + ":"            // STDEV
                 + ((double) (int) (100 * stats[2]) / 100) + ":"                // SHANON
-                + ((double) (int) (10 * stats[3]) / 10) + ":";                  //      GC
+                + ((double) (int) (10 * stats[3]) / 10);                  //      GC
                // + (double) (int) percentAlignPower + ":"
                // + (double) (int) bpCovary + ":"
               //  + (double) (int) totalBasePair;
         if (VERBOSE)
             System.out.println("Pre SISSIz bed file: \n" + " " + BedFile);
-
+System.out.println("This is the bedfile" + BedFile);
         int random = (int) ((double) 10000 * Math.random());
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
@@ -473,7 +469,7 @@ public class ScanItFast implements Runnable {
 //***************** 	SISSIz scan & parse		******************
         String[] SissizOutTab = new String[12];
         try {
-            SissizOutTab = ScanSSZ(Path, BedFile, 1, random);
+            SissizOutTab = ScanSSZ(Path, BedFile, random);
             if (SissizOutTab == null) { // timeout
                 Aln.delete();
             }
@@ -493,8 +489,7 @@ public class ScanItFast implements Runnable {
         } else {
             FinalBedFile = BedFile + ":" + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
             // delete low scoring alignments
-            if ((SissizOutTab[1].equals("r") && Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD)
-                    || (SissizOutTab[1].equals("s") && Double.parseDouble(SissizOutTab[10]) > SSZ_THRESHOLD)) {
+            if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 Aln.delete();
                 if (PRINTALL) {
                     System.out.println(FinalBedFile.replaceAll("_", "\t"));
@@ -513,7 +508,7 @@ public class ScanItFast implements Runnable {
         }
         // * * * * * *  now for the RC  * * * * * *
         try {
-            SissizOutTab = ScanSSZ(Path, BedFile + "rc",  1, random);
+            SissizOutTab = ScanSSZ(Path, BedFile + "rc", random);
             if (SissizOutTab == null) {
                 AlnRC.delete();
             }
@@ -532,8 +527,7 @@ public class ScanItFast implements Runnable {
         } else {
             FinalBedFileRC = BedFile + ":" + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + Antisense;
             // delete low scoring alignments
-            if ((SissizOutTab[1].equals("r") && Double.parseDouble(SissizOutTab[10]) > -2.2)
-                    || (SissizOutTab[1].equals("s") && Double.parseDouble(SissizOutTab[10]) > -2.7)) {
+            if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 AlnRC.delete();
                 if (PRINTALL) {
                     System.out.println(FinalBedFileRC.replaceAll("_", "\t"));
@@ -580,7 +574,7 @@ public class ScanItFast implements Runnable {
         //					SISSIz scan & parse						*
         //*********************************************************************
         // sissiz-di       cluster.109999_step.aln  8       150     0.8759  0.8542  0.0094  -13.88  -8.20   3.48    -1.63
-        protected static String[] ScanSSZ (String Path, String BedFile, int counter, int id ) throws
+        protected static String[] ScanSSZ (String Path, String BedFile, int id ) throws
         IOException {
             //stats[0] Mean Pairwise ID
             //stats[1] Variance
@@ -591,14 +585,9 @@ public class ScanItFast implements Runnable {
             String SissizOutTab[] = new String[12];
             String Output = "", Error = "";
             String Command = SSZBINARY;
-          //  double threshold = 60; // threshold on statistic for SISSIz vs SISSIz-RIBOSUM selection
 
-          //  if (stats[5] < threshold || stats[3] >= 70) {
-               // counter = 2;
-                Command = Command + " -j " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id; // RIBOSUM scoring
-          //  } else {
-           //     Command = Command + " " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id;  // new scoring
-           // }
+            Command = Command + " -j " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id; // RIBOSUM scoring
+
             try {
                 long now = System.currentTimeMillis();
                 long timeoutInMillis = 1000L * 300;                          // max 5 minutes
@@ -607,7 +596,7 @@ public class ScanItFast implements Runnable {
                 Process Sissiz = Runtime.getRuntime().exec(Command);
                 BufferedReader SissizErr = new BufferedReader(new InputStreamReader(Sissiz.getErrorStream()));
                 if (VERBOSE)
-                    System.out.println(counter + ": Running " + Command);
+                    System.out.println(": Running " + Command);
                 while (isAlive(Sissiz)) {
                     Thread.sleep(100);
                     if (System.currentTimeMillis() > finish) {
@@ -616,24 +605,9 @@ public class ScanItFast implements Runnable {
                         SissizErr.close();
                         Sissiz.destroy();
                         return null;
-                    } else {
-                        // avoid timeout
-                        if (SissizErr.ready()) {
-                            Error = SissizErr.readLine();
-/*						if ( Error.length() > 17 && Error.substring(0,17).equals( "WARNING: Negative") && counter <2 ) {
-							if (VERBOSE) {
-								System.out.println( Error ) ;
-								System.out.println("         Launching SISSIz with more flanking sites");
-							}
-							SissizErr.close();
-							Sissiz.destroy();
-							// launch  SISSIz with more flanking sites
-							SissizOutTab = ScanSSZ( Path, BedFile, stats , (counter+1), id );
-							return SissizOutTab;
-						}
-*/
+
+
                         }
-                    }
                 }
                 SissizErr.close();
                 // get Output if process didn't complete in recursion
@@ -649,74 +623,10 @@ public class ScanItFast implements Runnable {
                     }
                     SissizOut.close();
                 }
-               /* // rerun SISSIz if output is dodgy
-                try {
-                    *//*>>>>>>*//*
-                    if (Double.parseDouble(SissizOutTab[7]) == 0
-                            || (Math.abs(Double.parseDouble(SissizOutTab[9])) < 0.5 // variance of simulated alignments
-                            && counter == 1)) {
-                        if (VERBOSE)
-                            System.out.println("SISSIz gave dodgy output... retrying with RIBOSUM");
-                        SissizOutTab = new String[12];
-                        now = System.currentTimeMillis();
-                        finish = now + timeoutInMillis;
-                        Sissiz = Runtime.getRuntime().exec(SSZBINARY + " -j " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id);
-                        if (VERBOSE)
-                            System.out.println("Running " + SSZBINARY + " -j " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id);
-                        SissizErr = new BufferedReader(new InputStreamReader(Sissiz.getErrorStream()));
-                        while (isAlive(Sissiz)) {
-                            Thread.sleep(100);  // do we need this?
-                            if (System.currentTimeMillis() > finish) {
-                                if (VERBOSE)
-                                    System.out.println("SISSIz failed to run within time");
-                                SissizErr.close();
-                                Sissiz.destroy();
-                                return null;
-                            } else {
-                                // avoid infinity loop
-                                if (SissizErr.ready()) {
-                                    Error = SissizErr.readLine();
-*//*								if ( Error.length() > 17 && Error.substring(0,17).equals( "WARNING: Negative") && counter <2 ) {
-									if (VERBOSE) {
-										System.out.println( Error ) ;
-										System.out.println("         Adding extra flanking sites");
-									}
-									SissizErr.close();
-									Sissiz.destroy();
-									// launching with more flanking sites
-									SissizOutTab = ScanSSZ( Path, BedFile, stats, 4, id );
-									break;
-								}
-*//*
-                                }
-                            }
-                        }
-                        SissizErr.close();
-                        if (SissizOutTab[0] == null) {
-                            BufferedReader SissizOut = new BufferedReader(new InputStreamReader(Sissiz.getInputStream()));
-                            while ((Output = SissizOut.readLine()) != null) {
-                                System.out.println(Output);
-                                if (Output.length() > 6 && Output.substring(0, 6).equals("sissiz")) {
-                                    if (VERBOSE)
-                                        System.out.println(Output + "  ...DONE !!\n");
-                                    SissizOutTab = Output.split("\\s");
-                                    SissizOutTab[1] = "r";
-                                }
-                            }
-                            SissizOut.close();
-                        }
-                    }
 
-                } catch (Exception Fuck) {
-                    System.err.println(" Null pointer after launching SSZ with counter = " + counter);
-                    System.err.println("  with file = " + BedFile.replaceAll("\t", "_") + ".aln");
-                    if (SissizOutTab[7] == null)
-                        System.err.println("Null output data");
-                    Fuck.printStackTrace();
-                }*/
             } catch (Exception err) {
-                System.out.println(" Caught Error!\n ----> " + Command + "\n  counter--> " + counter);
-                System.err.println("!!!Caught Error!\n ----> " + Command + "\n  counter--> " + counter);
+                System.out.println(" Caught Error!\n ----> " + Command + "\n  counter--> " );
+                System.err.println("!!!Caught Error!\n ----> " + Command + "\n  counter--> " );
                 //String [] OutAln = new String[ goodSeqs ] ;
                 err.printStackTrace();
                 System.err.println("===============================");
@@ -734,9 +644,6 @@ public class ScanItFast implements Runnable {
         } catch (IllegalThreadStateException e) {
             return true;
         }
-    }
-    public void setSsz(double newValue){
-        SSZ_THRESHOLD = newValue;
     }
     public void setSszR(double newValue){
         SSZR_THRESHOLD = newValue;
