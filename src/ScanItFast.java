@@ -623,7 +623,68 @@ public class ScanItFast implements Runnable {
                     }
                     SissizOut.close();
                 }
+                // rerun SISSIz if output is dodgy
+                try {
+                    /*>>>>>>*/
+                    if (Double.parseDouble(SissizOutTab[7]) == 0
+                            || (Math.abs(Double.parseDouble(SissizOutTab[9])) < 0.5)){ // variance of simulated alignments
+                        if (VERBOSE)
+                            System.out.println("SISSIz gave dodgy output... retrying with RIBOSUM");
+                        SissizOutTab = new String[12];
+                        now = System.currentTimeMillis();
+                        finish = now + timeoutInMillis;
+                        Sissiz = Runtime.getRuntime().exec(SSZBINARY + " -j " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id);
+                        if (VERBOSE)
+                            System.out.println("Running " + SSZBINARY + " -j " + Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + id);
+                        SissizErr = new BufferedReader(new InputStreamReader(Sissiz.getErrorStream()));
+                        while (isAlive(Sissiz)) {
+                            Thread.sleep(100);  // do we need this?
+                            if (System.currentTimeMillis() > finish) {
+                                if (VERBOSE)
+                                    System.out.println("SISSIz failed to run within time");
+                                SissizErr.close();
+                                Sissiz.destroy();
+                                return null;
+                            } else {
+                                // avoid infinity loop
+                                if (SissizErr.ready()) {
+                                    Error = SissizErr.readLine();
+/*								if ( Error.length() > 17 && Error.substring(0,17).equals( "WARNING: Negative") && counter <2 ) {
+									if (VERBOSE) {
+										System.out.println( Error ) ;
+										System.out.println("         Adding extra flanking sites");
+									}
+									SissizErr.close();
+									Sissiz.destroy();
+									// launching with more flanking sites
+									SissizOutTab = ScanSSZ( Path, BedFile, stats, 4, id );
+									break;
+								}
+*/
+                                }
+                            }
+                        }
+                        SissizErr.close();
+                        if (SissizOutTab[0] == null) {
+                            BufferedReader SissizOut = new BufferedReader(new InputStreamReader(Sissiz.getInputStream()));
+                            while ((Output = SissizOut.readLine()) != null) {
+                                if (Output.length() > 6 && Output.substring(0, 6).equals("sissiz")) {
+                                    if (VERBOSE)
+                                        System.out.println(Output + "  ...DONE !!\n");
+                                    SissizOutTab = Output.split("\\s");
+                                    SissizOutTab[1] = "r";
+                                }
+                            }
+                            SissizOut.close();
+                        }
+                    }
 
+                } catch (Exception Fuck) {
+                    System.err.println("  with file = " + BedFile.replaceAll("\t", "_") + ".aln");
+                    if (SissizOutTab[7] == null)
+                        System.err.println("Null output data");
+                    Fuck.printStackTrace();
+                }
             } catch (Exception err) {
                 System.out.println(" Caught Error!\n ----> " + Command + "\n  counter--> " );
                 System.err.println("!!!Caught Error!\n ----> " + Command + "\n  counter--> " );
