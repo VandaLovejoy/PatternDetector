@@ -22,7 +22,7 @@ public class ScanItFast implements Runnable {
             shanon = 0,
             uniqueComps = 0,
             uniqueSeqs,
-            SSZR_THRESHOLD = -2.2,        // alignments scoring below this will be kept (Z-score)
+            SSZR_THRESHOLD = -3.0,        // alignments scoring below this will be kept (Z-score)
             outCols;
     private double[][] pids, gaps;
 
@@ -418,7 +418,7 @@ public class ScanItFast implements Runnable {
               //  + (double) (int) totalBasePair;
         if (VERBOSE)
             System.out.println("Pre SISSIz bed file: \n" + " " + BedFile);
-System.out.println("This is the bedfile" + BedFile);
+
         int random = (int) ((double) 10000 * Math.random());
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //

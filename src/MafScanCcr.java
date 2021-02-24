@@ -25,7 +25,7 @@ public class MafScanCcr {
             ALIFOLDBINARY = "~/usr/local/bin/RNALalifold",
             RSCAPEBINARY = "/usr/bin/R-scape";
 
-    static double SSZR = -3;
+    static double SSZR = -3.0;
 
 
     public static synchronized void main(String[] Args) throws IOException, InterruptedException {
