@@ -350,11 +350,11 @@ public class MafScanCcr {
             int lociEnd = (Integer.parseInt(mafCord[5] ) + 1  - (Integer.parseInt(mafCord[2]) + nuc)) + 1 ;
 
             int lociStart = lociEnd - motifHuman.replaceAll("[^ATCGUatcgu]", "").length();
-            cordFinal = new int[]{lociStart, lociEnd};
+            cordFinal = new int[]{lociStart + 1, lociEnd};
         } else {
             int lociStart = Integer.parseInt(mafCord[2]) + nuc;
             int lociEnd = lociStart + (motifHuman.length());
-            cordFinal = new int[]{lociStart, lociEnd};
+            cordFinal = new int[]{lociStart + 1 , lociEnd};
         }
 
         return cordFinal;

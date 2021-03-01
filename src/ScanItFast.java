@@ -147,7 +147,6 @@ public class ScanItFast implements Runnable {
         //*********************************************************************
         if (VERBOSE)
             System.out.println("- - -> calculating statistics");
-       double mpiTEST =0.0;
         uniqueSeqs = goodSeqs;
         outCols = OutAln[0].length() - 25; //change last variable if CLUSTAL properties changes
         stats = new double[6];
@@ -203,17 +202,22 @@ public class ScanItFast implements Runnable {
                             else
                                 isNotUnique[j] = true; // this should also consider identical seqs
                         }
+
                             uniqueComps++;
                             // old mean pairwise identity ( considers gaps )
                             mpi = mpi + 100 * pids[i][j] / pids[j][i];
+
                             // classical average identity
                             mpi2 = mpi2 + 100 * pids[i][j] / Math.min(OutAln[i].replaceAll("[^ATCGU]", "").length(),
                                     OutAln[j].replaceAll("[^ATCGU]", "").length());
 
+
                     }
                 }
             }
+
         }
+
 
 
 
