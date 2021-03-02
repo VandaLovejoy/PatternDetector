@@ -491,7 +491,7 @@ public class ScanItFast implements Runnable {
         if (SissizOutTab == null || SissizOutTab[10] == null) {
             Aln.delete();
         } else {
-            FinalBedFile = BedFile + ":" + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
+            FinalBedFile = BedFile + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
             // delete low scoring alignments
             if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 Aln.delete();
@@ -529,7 +529,7 @@ public class ScanItFast implements Runnable {
         if (SissizOutTab == null || SissizOutTab[10] == null) {
             AlnRC.delete();
         } else {
-            FinalBedFileRC = BedFile + ":" + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + Antisense;
+            FinalBedFileRC = BedFile + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + Antisense;
             // delete low scoring alignments
             if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 AlnRC.delete();

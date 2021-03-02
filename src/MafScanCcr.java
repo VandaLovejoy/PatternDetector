@@ -344,12 +344,13 @@ public class MafScanCcr {
         if (mafCord[4].equals("-")){
             int lociEnd = (Integer.parseInt(mafCord[5] ) + 1  - (Integer.parseInt(mafCord[2]) + nuc)) + 1 ;
 
-            int lociStart = lociEnd - motifHuman.replaceAll("[^ATCGUatcgu]", "").length();
-            cordFinal = new int[]{lociStart + 1, lociEnd};
+            int lociStart = (lociEnd - motifHuman.replaceAll("[^ATCGUatcgu]", "").length()) + 1;
+
+            cordFinal = new int[]{lociStart, lociEnd};
         } else {
-            int lociStart = Integer.parseInt(mafCord[2]) + nuc;
+            int lociStart = (Integer.parseInt(mafCord[2]) + nuc) + 1;
             int lociEnd = lociStart + (motifHuman.length());
-            cordFinal = new int[]{lociStart + 1 , lociEnd};
+            cordFinal = new int[]{lociStart , lociEnd};
         }
 
         return cordFinal;
