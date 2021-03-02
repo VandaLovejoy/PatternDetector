@@ -338,22 +338,25 @@ public class MafScanCcr {
 
     private static int[] getRealCoordinates (int start, String[] mafCord, String motifHuman){
         int [] cordFinal;
+        int [] cordFinalPlus1= new int[2];
         String withoutGap= mafCord[6].substring(0, start);
         int nuc =withoutGap.replaceAll("-", "").length();
 
         if (mafCord[4].equals("-")){
             int lociEnd = (Integer.parseInt(mafCord[5] ) + 1  - (Integer.parseInt(mafCord[2]) + nuc)) + 1 ;
 
-            int lociStart = (lociEnd - motifHuman.replaceAll("[^ATCGUatcgu]", "").length()) + 1;
+            int lociStart = (lociEnd - motifHuman.replaceAll("[^ATCGUatcgu]", "").length());
 
             cordFinal = new int[]{lociStart, lociEnd};
         } else {
-            int lociStart = (Integer.parseInt(mafCord[2]) + nuc) + 1;
+            int lociStart = (Integer.parseInt(mafCord[2]) + nuc) ;
             int lociEnd = lociStart + (motifHuman.length());
             cordFinal = new int[]{lociStart , lociEnd};
         }
+        cordFinalPlus1[0]= cordFinal[0];
+        cordFinalPlus1[1]= cordFinal[1] -1;
 
-        return cordFinal;
+        return cordFinalPlus1;
     }
     protected static char[] getAlnTab(String[] seq){
         char[] AlnTab = new char[seq[0].length()];
