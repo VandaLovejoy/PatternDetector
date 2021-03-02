@@ -337,14 +337,9 @@ public class MafScanCcr {
 
 
     private static int[] getRealCoordinates (int start, String[] mafCord, String motifHuman){
-        int nuc = 0;
         int [] cordFinal;
-        for (int i = 0; i < start; i++ ){
-            char gap = mafCord[6].charAt(i);
-            if (!(gap == '-')){
-                nuc+=1;
-            }
-        }
+        String withoutGap= mafCord[6].substring(0, start);
+        int nuc =withoutGap.replaceAll("-", "").length();
 
         if (mafCord[4].equals("-")){
             int lociEnd = (Integer.parseInt(mafCord[5] ) + 1  - (Integer.parseInt(mafCord[2]) + nuc)) + 1 ;
