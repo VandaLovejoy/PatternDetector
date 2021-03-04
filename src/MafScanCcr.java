@@ -156,7 +156,7 @@ public class MafScanCcr {
                 TempTab = new String[lineCount]; // 7 maf columns
                 // fill in array from file
                 int newLineCount = 0;
-                blockAln = 1;
+                blockAln = 0;
                 /************************************************************************
                  ****   This stuff is messy, but avoids problems at last block       ****
                  ************************************************************************/
@@ -164,21 +164,17 @@ public class MafScanCcr {
                 ExecutorService MultiThreads = Executors.newFixedThreadPool(NTHREDS);
                 List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
                 readBlocks:
-                while ((Line = ReadFile.readLine()) != null || newLineCount == lineCount) {
-                    if (Line == null || Line.length() > 1 && Line.charAt(0) != '#')
-                        newLineCount++;
-                    if (newLineCount > lineCount || Line.length() >= 1) { // only lines with sequences
-                        if (newLineCount <= lineCount && Line.length() > 1 && Line.substring(0, 1).equals("s")) {
+                while ((Line = ReadFile.readLine()) != null ) {
+                    if (Line.length() >= 1 && Line.charAt(0) != '#') {
+                        if (Line != null && Line.length() >= 1 && Line.substring(0, 1).equals("a")) {
+                            blockAln++;
+                            continue readBlocks;
+                        } else if (Line.substring(0, 1).equals("s")) {
                             Temp = Temp + Line + "@";
-                        } else if ((Line != null && Line.length() >= 1 && Line.substring(0, 1).equals("a")) || newLineCount > lineCount) {
-                            if (newLineCount == 1) {
-                                Temp ="";
-                                blockAln++;
-                                newLineCount = 0;
-                                continue readBlocks;
-                            }
-
-                            if (Temp.split("@").length >= 3) { // at least 3 sequences
+                        }
+                    } else if ((Temp.split("@").length <= 2) && Line.equals("")){
+                        Temp = "";
+                    }else if ((Temp.split("@").length >= 3) && Line.equals("")) { // at least 3 sequences
                                 TempTab = new String[Temp.split("@").length];
                                 TempTab = Temp.split("@");
                                 Temp = "";
@@ -265,8 +261,8 @@ public class MafScanCcr {
                                                 alnTab.add(aln);
                                             }
 
-                                            ScanItFast aln = new ScanItFast( associativeList, alnTab,
-                                                    arrayLociChrm,Path,dirProgram + "/" + OUT_PATH, GAPS,
+                                            ScanItFast aln = new ScanItFast(associativeList, alnTab,
+                                                    arrayLociChrm, Path, dirProgram + "/" + OUT_PATH, GAPS,
                                                     SSZBINARY, RSCAPEBINARY, VERBOSE, PRINTALL);
                                             aln.setSszR(SSZR);
 
@@ -297,28 +293,24 @@ public class MafScanCcr {
                                 }
 */
                                 for (Future<Runnable> g : futures) {
-                                    try{
-                                    g.get();
+                                    try {
+                                        g.get();
 
 
-                            } catch (Exception Fuck) {
-                                System.err.println("MultiThreads took too long!  OOps!");
-                                Fuck.printStackTrace();
-                            }
+                                    } catch (Exception Fuck) {
+                                        System.err.println("MultiThreads took too long!  OOps!");
+                                        Fuck.printStackTrace();
+                                    }
                                 }
 
 
-                            blockAln++;
+                                blockAln++;
+                            }
+                            //System.out.println(Temp.split("@").length );
 
-                        } /* else if (Temp.split("@").length == 1) {
-                            blockAln++;
-                        }*/
 
-                           //System.out.println(Temp.split("@").length );
-                        Temp = "";
                     }
-                }
-            }
+
 
 
                 ReadFile.close();
@@ -342,7 +334,6 @@ public class MafScanCcr {
     private static int[] getRealCoordinates (int start, String[] mafCord, String motifHuman){
         int [] cordFinal;
         int [] cordFinalPlus1= new int[2];
-        System.out.println(mafCord[6].length());
         String withoutGap= mafCord[6].substring(0, start);
 
         int nuc = withoutGap.replaceAll("-", "").length();
