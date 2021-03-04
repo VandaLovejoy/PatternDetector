@@ -303,10 +303,7 @@ public class MafScanCcr {
                                     }
                                 }
 
-
-                                blockAln++;
                             }
-                            //System.out.println(Temp.split("@").length );
 
 
                     }
