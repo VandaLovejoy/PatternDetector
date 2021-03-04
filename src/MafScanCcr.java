@@ -172,7 +172,9 @@ public class MafScanCcr {
                             Temp = Temp + Line + "@";
                         } else if ((Line != null && Line.length() >= 1 && Line.substring(0, 1).equals("a")) || newLineCount > lineCount) {
                             if (newLineCount == 1) {
-
+                                Temp ="";
+                                blockAln++;
+                                newLineCount = 0;
                                 continue readBlocks;
                             }
 
@@ -307,11 +309,12 @@ public class MafScanCcr {
 
 
                             blockAln++;
-                        } else if (Temp.split("@").length == 2) {
+
+                        } /* else if (Temp.split("@").length == 1) {
                             blockAln++;
-                        }
+                        }*/
 
-
+                           //System.out.println(Temp.split("@").length );
                         Temp = "";
                     }
                 }
@@ -339,8 +342,10 @@ public class MafScanCcr {
     private static int[] getRealCoordinates (int start, String[] mafCord, String motifHuman){
         int [] cordFinal;
         int [] cordFinalPlus1= new int[2];
+        System.out.println(mafCord[6].length());
         String withoutGap= mafCord[6].substring(0, start);
-        int nuc =withoutGap.replaceAll("-", "").length();
+
+        int nuc = withoutGap.replaceAll("-", "").length();
 
         if (mafCord[4].equals("-")){
             int lociEnd = (Integer.parseInt(mafCord[5] ) + 1  - (Integer.parseInt(mafCord[2]) + nuc)) + 1 ;
