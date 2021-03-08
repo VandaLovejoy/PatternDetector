@@ -29,7 +29,7 @@ public class MafScanCcr {
 
 
     public static synchronized void main(String[] Args) throws IOException, InterruptedException {
-        long startTime = System.nanoTime();
+
         // variables
         String[] mafTab;
         String[] mafTabTemp;
@@ -175,12 +175,15 @@ public class MafScanCcr {
                     } else if ((Temp.split("@").length <= 2) && Line.equals("")){
                         Temp = "";
                     }else if ((Temp.split("@").length >= 3) && Line.equals("")) { // at least 3 sequences
-                                TempTab = new String[Temp.split("@").length];
+                        long startTime = System.nanoTime();
+                        TempTab = new String[Temp.split("@").length];
+                        System.out.println("This is the number of species in mafblock "+ TempTab.length);
                                 TempTab = Temp.split("@");
                                 Temp = "";
 
                                 ArrayList<String[]> associativeList = new ArrayList<>();
                                 mafTabTemp = TempTab[0].split("\\s+");
+                                System.out.println("this is the length of maf block"+ mafTabTemp[3]);
                                 futures = new ArrayList<Future<Runnable>>();
                                 // add Path Flag ? < < < < < < < < < < < < < < < < < < < < < < < < < < < < <
                                 String Path = OUT_PATH + "/aln/" + mafTabTemp[1].substring(mafTabTemp[1].lastIndexOf(".") + 1);
@@ -303,6 +306,8 @@ public class MafScanCcr {
                                     }
                                 }
 
+                        long endTime = System.nanoTime();
+                        System.out.println("That took"+ (endTime-startTime) +" for program to finish in nanoseconds");
                             }
 
 
@@ -318,8 +323,8 @@ public class MafScanCcr {
         }
 
 
-        long endTime = System.nanoTime();
-        System.out.println("That took"+ (endTime-startTime) +" for program to finish in nanoseconds");
+
+
     }
 
     //*********************************************************************
@@ -338,12 +343,12 @@ public class MafScanCcr {
         if (mafCord[4].equals("-")){
             int lociEnd = (Integer.parseInt(mafCord[5] ) + 1  - (Integer.parseInt(mafCord[2]) + nuc)) + 1 ;
 
-            int lociStart = (lociEnd - motifHuman.replaceAll("[^ATCGUatcgu]", "").length());
+            int lociStart = (lociEnd - motifHuman.replaceAll("-", "").length());
 
             cordFinal = new int[]{lociStart, lociEnd};
         } else {
             int lociStart = (Integer.parseInt(mafCord[2]) + nuc) ;
-            int lociEnd = lociStart + (motifHuman.length());
+            int lociEnd = lociStart + (motifHuman.replaceAll("-", "").length());
             cordFinal = new int[]{lociStart , lociEnd};
         }
         cordFinalPlus1[0]= cordFinal[0];
