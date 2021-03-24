@@ -149,7 +149,7 @@ public class MafScanCcr {
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=200" + " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
 
-                 executeCommand(cmd);
+                // executeCommand(cmd);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -280,7 +280,7 @@ public class MafScanCcr {
                                     reader.close();
 
 
-                                    //  file.delete();
+                                     // file.delete();
 
 
                                 } catch (FileNotFoundException e) {

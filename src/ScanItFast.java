@@ -286,20 +286,20 @@ public class ScanItFast implements Runnable {
         stats[2] = -1 * shanon / ((double) outCols);                                                        // Normalized Shanon entropy
         stats[3] = 100 * (totalChars[2] + totalChars[3]) / (totalChars[0] + totalChars[1] + totalChars[2] + totalChars[3]);       // GC content
         stats[4] = 100 * totalChars[4] / (outCols * goodSeqs);                                          // GAP content
-/*
+
 
         //*********************************************************************
         //					R-scape scan & parse						*
         //*********************************************************************
         ///***************** 	R-scape scan & parse		******************
-        // Write Sequences to Stockholm Format
-        File dir = new File(dirPath + "/R-Scape");
-        if (!dir.exists()){
-            dir.mkdir();
-        }
         String stkName =  key[1] + "_" + key[2] + ".stk";
-        File stkFile = new File(dir + "/" + stkName);
-
+        String pathSpecName= dirPath + "/"+ key[1] + "_" + key[2];
+        // Write Sequences to Stockholm Format
+        File theDir = new File (pathSpecName);
+        if (!theDir.exists()) {
+            theDir.mkdir();
+        }
+        File stkFile = new File(theDir + "/" + stkName);
 
         try {
             BufferedWriter WriteStockholm = new BufferedWriter(new FileWriter( stkFile ));
@@ -327,9 +327,8 @@ public class ScanItFast implements Runnable {
             return;
         }
 
-
         try {
-            rScape(stkFile, RSCAPEBINARY, dirPath);
+            rScape(stkFile, RSCAPEBINARY, pathSpecName);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -339,7 +338,7 @@ public class ScanItFast implements Runnable {
 
 
         String endFileName = ".fold.power";
-        File f = new File(dirPath+ "/R-Scape");
+        File f = new File(pathSpecName);
         File[] matchingFiles = f.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 return  name.endsWith(endFileName);
@@ -350,7 +349,10 @@ public class ScanItFast implements Runnable {
         String expectedCovary = "";
         String observedCovary = "";
 
+
+
         try {
+
             Scanner scanner = new Scanner(matchingFiles[0]);
 
             //now read the file line by line...
@@ -396,15 +398,16 @@ public class ScanItFast implements Runnable {
             bpCovary =0.0;
         }
 
-       //Delete file with R-scape info
-        String[] entries = dir.list();
-        for(String s:entries){
-            File currentFile = new File (dir.getPath(),s);
-            currentFile.delete();
+
+        if (!(matchingFiles.length==0)) {
+            //Delete file with R-scape info
+            String[] entries = theDir.list();
+            for (String s : entries) {
+                File currentFile = new File(theDir.getPath(), s);
+                currentFile.delete();
+            }
+            theDir.delete();
         }
-*/
-
-
         // save BED coords
         if (VERBOSE)
             System.out.println("- -> Calculating BED coords ");
@@ -416,10 +419,10 @@ public class ScanItFast implements Runnable {
                 + ((double) (int) (10 * stats[4]) / 10) + ":"                     // GAPS
                 + ((double) (int) (10 * Math.sqrt(stats[1])) / 10) + ":"            // STDEV
                 + ((double) (int) (100 * stats[2]) / 100) + ":"                // SHANON
-                + ((double) (int) (10 * stats[3]) / 10);                  //      GC
-               // + (double) (int) percentAlignPower + ":"
-               // + (double) (int) bpCovary + ":"
-              //  + (double) (int) totalBasePair;
+                + ((double) (int) (10 * stats[3]) / 10) + ":"                  //      GC
+              //  + (double) (int) percentAlignPower + ":"
+              //  + (double) (int) bpCovary + ":"
+                + (double) (int) totalBasePair;
         if (VERBOSE)
             System.out.println("Pre SISSIz bed file: \n" + " " + BedFile);
 
@@ -427,8 +430,8 @@ public class ScanItFast implements Runnable {
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
-        if (outCols > (FilteredTab[0].length()) / 2 && stats[4] <= 75 && stats[0] > 60) {
-            //totalBasePair != 0.0 && !(percentAlignPower > 10 && bpCovary < 2)
+        if (outCols > (FilteredTab[0].length()) / 2 && stats[4] <= 75 && stats[0] > 60 && totalBasePair != 0.0 &&
+                !(percentAlignPower > 10 && bpCovary < 2)){
 
             // Write Sequences to ALN Format
             try {
@@ -500,7 +503,7 @@ public class ScanItFast implements Runnable {
                 }
             } else {
                 //write bed and rename alignment
-                System.out.println(FinalBedFile.replaceAll("_", "\t"));
+                System.out.println(FinalBedFile.replaceAll("_", "\t") + "\t"+key[4]+"_"+key[5]);
                 File NewFile = new File(Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln");
                 int file_count = 0;
                 while (NewFile.exists()) {
@@ -538,7 +541,7 @@ public class ScanItFast implements Runnable {
                 }
             } else {
                 //write bedRC and rename alignment
-                System.out.println(FinalBedFileRC.replaceAll("_", "\t"));
+                System.out.println(FinalBedFileRC.replaceAll("_", "\t")+ "\t"+key[4]+"_"+key[5]);
                 File NewFile = new File(Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln");
                 int file_count = 0;
                 while (NewFile.exists()) {
@@ -563,11 +566,12 @@ public class ScanItFast implements Runnable {
 
     private void rScape(File stockholmFile, String RSCAPEBINARY, String path)throws IOException,
             InterruptedException {
-        String pathway = path + "/R-Scape";
 
         String cmd = RSCAPEBINARY + " --fold" + " --nofigures "
                 + stockholmFile;
-        Process process = Runtime.getRuntime().exec(cmd, null, new File(pathway));
+        Process process = Runtime.getRuntime().exec(cmd, null, new File(path));
+
+
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(process.getInputStream()));
         while ((reader.readLine()) != null) {
