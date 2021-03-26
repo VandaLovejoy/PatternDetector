@@ -150,10 +150,10 @@ public class MafScanCcr {
                  ****   RNALalifold       ****
                  ************************************************************************/
 
-                String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=200" + " --ribosum_scoring"
+                String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=300" + " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
 
-                // executeCommand(cmd);
+                 executeCommand(cmd);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
