@@ -2,7 +2,8 @@ import java.util.*; import java.io.*; import java.math.* ; import java.lang.*;;
 
 public class ScanItFast implements Runnable {
     static boolean VERBOSE = false,
-            PRINTALL = false;
+            PRINTALL = false,
+            RSCAPE = false;
     private boolean[] hasChars, keepMe, isAmbiguous, isNotUnique;
     private String[] key;
     private ArrayList<String[]> motifs;
@@ -23,17 +24,21 @@ public class ScanItFast implements Runnable {
             uniqueComps = 0,
             uniqueSeqs,
             SSZR_THRESHOLD = -3.0,        // alignments scoring below this will be kept (Z-score)
-            outCols;
+            outCols,
+            percentAlignPower,
+            bpCovary,
+            totalBasePair;
     private double[][] pids, gaps;
 
     ScanItFast(ArrayList motifs, ArrayList<char[]> alnTab,
                String[] key, String Path, String dirPath, int GAPS,
-               String SSZBINARY, String RSCAPEBINARY, boolean VERBOSE, boolean PRINTALL) {
+               String SSZBINARY, String RSCAPEBINARY, boolean VERBOSE, boolean RSCAPE, boolean PRINTALL) {
         this.Path = Path;
         this.dirPath = dirPath;
         this.SSZBINARY = SSZBINARY;
         this.RSCAPEBINARY = RSCAPEBINARY;
         this.VERBOSE = VERBOSE;
+        this.RSCAPE = RSCAPE;
         this.PRINTALL = PRINTALL;
         this.alnTab = alnTab;
         this.GAPS = GAPS;
@@ -287,7 +292,7 @@ public class ScanItFast implements Runnable {
         stats[3] = 100 * (totalChars[2] + totalChars[3]) / (totalChars[0] + totalChars[1] + totalChars[2] + totalChars[3]);       // GC content
         stats[4] = 100 * totalChars[4] / (outCols * goodSeqs);                                          // GAP content
 
-
+        if(RSCAPE) {
         //*********************************************************************
         //					R-scape scan & parse						*
         //*********************************************************************
@@ -327,6 +332,7 @@ public class ScanItFast implements Runnable {
             return;
         }
 
+
         try {
             rScape(stkFile, RSCAPEBINARY, pathSpecName);
         } catch (IOException e) {
@@ -336,19 +342,17 @@ public class ScanItFast implements Runnable {
         }
 
 
-
         String endFileName = ".fold.power";
         File f = new File(pathSpecName);
         File[] matchingFiles = f.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return  name.endsWith(endFileName);
+                return name.endsWith(endFileName);
             }
         });
 
         String totalBasePairs = "";
         String expectedCovary = "";
         String observedCovary = "";
-
 
 
         try {
@@ -368,9 +372,9 @@ public class ScanItFast implements Runnable {
                 } else if (line.startsWith("# BPAIRS observed to covary")) {
                     observedCovary = line;
 
-                }else if (counter == 5) {
+                } else if (counter == 5) {
                     totalBasePairs = line;
-                    counter ++;
+                    counter++;
 
                 } else if (line.startsWith("#")) {
                     counter++;
@@ -382,32 +386,31 @@ public class ScanItFast implements Runnable {
             e.printStackTrace();
             return;
         }
-        String [] expCov= expectedCovary.split(" ");
-        String [] totalBP = totalBasePairs.split(" ");
-        String [] obsCov = observedCovary.split(" ");
+        String[] expCov = expectedCovary.split(" ");
+        String[] totalBP = totalBasePairs.split(" ");
+        String[] obsCov = observedCovary.split(" ");
         double covExp = Double.parseDouble(expCov[5]);
-        double totalBasePair = Double.parseDouble(totalBP[totalBP.length - 1 ]);
-        double observCov = Double.parseDouble(obsCov[obsCov.length - 1 ]);
+        double totalBasePair = Double.parseDouble(totalBP[totalBP.length - 1]);
+        double observCov = Double.parseDouble(obsCov[obsCov.length - 1]);
         double percentAlignPower;
         double bpCovary;
         if (totalBasePair != 0.0) {
             percentAlignPower = covExp / totalBasePair * 100;
             bpCovary = observCov / totalBasePair * 100;
         } else {
-            percentAlignPower =0.0;
-            bpCovary =0.0;
+            percentAlignPower = 0.0;
+            bpCovary = 0.0;
         }
 
 
-        if (!(matchingFiles.length==0)) {
-            //Delete file with R-scape info
-            String[] entries = theDir.list();
-            for (String s : entries) {
-                File currentFile = new File(theDir.getPath(), s);
-                currentFile.delete();
-            }
-            theDir.delete();
+        //Delete file with R-scape info
+        String[] entries = theDir.list();
+        for (String s : entries) {
+            File currentFile = new File(theDir.getPath(), s);
+            currentFile.delete();
         }
+        theDir.delete();
+    }
         // save BED coords
         if (VERBOSE)
             System.out.println("- -> Calculating BED coords ");
@@ -419,10 +422,9 @@ public class ScanItFast implements Runnable {
                 + ((double) (int) (10 * stats[4]) / 10) + ":"                     // GAPS
                 + ((double) (int) (10 * Math.sqrt(stats[1])) / 10) + ":"            // STDEV
                 + ((double) (int) (100 * stats[2]) / 100) + ":"                // SHANON
-                + ((double) (int) (10 * stats[3]) / 10) + ":"                  //      GC
-              //  + (double) (int) percentAlignPower + ":"
-              //  + (double) (int) bpCovary + ":"
-                + (double) (int) totalBasePair;
+                + ((double) (int) (10 * stats[3]) / 10) + ":";                  //      GC
+
+
         if (VERBOSE)
             System.out.println("Pre SISSIz bed file: \n" + " " + BedFile);
 
@@ -430,9 +432,8 @@ public class ScanItFast implements Runnable {
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
-        if (outCols > (FilteredTab[0].length()) / 2 && stats[4] <= 75 && stats[0] > 60 && totalBasePair != 0.0 &&
-                !(percentAlignPower > 10 && bpCovary < 2)){
-
+        if (outCols > (FilteredTab[0].length()) / 2 && stats[4] <= 75 && stats[0] > 60){
+         //   !(percentAlignPower > 10 && bpCovary < 2) && totalBasePair != 0.0 &&
             // Write Sequences to ALN Format
             try {
                 BufferedWriter WriteClustal = new BufferedWriter(new FileWriter( Aln )),
@@ -503,7 +504,12 @@ public class ScanItFast implements Runnable {
                 }
             } else {
                 //write bed and rename alignment
-                System.out.println(FinalBedFile.replaceAll("_", "\t") + "\t"+key[4]+"_"+key[5]);
+                if(RSCAPE) {
+                    System.out.println(FinalBedFile.replaceAll("_", "\t") + "\t" + percentAlignPower + "\t" +
+                            bpCovary + "\t" + totalBasePair);
+                }else {
+                    System.out.println(FinalBedFile.replaceAll("_", "\t"));
+                }
                 File NewFile = new File(Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln");
                 int file_count = 0;
                 while (NewFile.exists()) {
@@ -540,8 +546,13 @@ public class ScanItFast implements Runnable {
                     System.out.println(FinalBedFileRC.replaceAll("_", "\t"));
                 }
             } else {
-                //write bedRC and rename alignment
-                System.out.println(FinalBedFileRC.replaceAll("_", "\t")+ "\t"+key[4]+"_"+key[5]);
+                if(RSCAPE){
+                    System.out.println(FinalBedFileRC.replaceAll("_", "\t")+ "\t" + percentAlignPower
+                            + "\t" + bpCovary + "\t" + totalBasePair);
+                } else {
+                    //write bedRC and rename alignment
+                    System.out.println(FinalBedFileRC.replaceAll("_", "\t"));
+                }
                 File NewFile = new File(Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln");
                 int file_count = 0;
                 while (NewFile.exists()) {

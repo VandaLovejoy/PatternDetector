@@ -16,7 +16,8 @@ public class MafScanCcr {
             FILTER_ID = true, //for removing identical sequences
             VERBOSE = false,
             PRINTALL = false,
-            REALIGN = false;
+            REALIGN = false,
+            RSCAPE = false;
     static String
             FILENAME = "",
             OUT_PATH = "",
@@ -73,6 +74,7 @@ public class MafScanCcr {
                     "  -sszr  double    report SISSIz+RIBOSUM hits below this Z-score (default -2.7)\n" +
                     "  -rnaz  double    report RNAz hits below this SVM probability (default 0.34)\n" +
                     "  -v               verbose (messy but detailed) output\n" +
+                    " -r                R-scape to be used" +
                     // add a less verbose option, outputing all bed coordinates and scores?
                     "  -w     int       window size (default 200)\n");
             System.exit(0);
@@ -125,6 +127,8 @@ public class MafScanCcr {
                 i++;
             } else if (Args[i].equals("-v")) { // verbose output
                 VERBOSE = true;
+            }else if (Args[i].equals("-r")){ //Rscape analysis
+                RSCAPE = true;
             } else if (Args[i].equals("-mafft")) { // realign
                 REALIGN = true;
             } else if (Args[i].equals("-i")) {
@@ -177,13 +181,11 @@ public class MafScanCcr {
                     }else if ((Temp.split("@").length >= 3) && Line.equals("")) { // at least 3 sequences
                         long startTime = System.nanoTime();
                         TempTab = new String[Temp.split("@").length];
-                        System.out.println("This is the number of species in mafblock "+ TempTab.length);
                                 TempTab = Temp.split("@");
                                 Temp = "";
 
                                 ArrayList<String[]> associativeList = new ArrayList<>();
                                 mafTabTemp = TempTab[0].split("\\s+");
-                                System.out.println("this is the length of maf block"+ mafTabTemp[3]);
                                 futures = new ArrayList<Future<Runnable>>();
                                 // add Path Flag ? < < < < < < < < < < < < < < < < < < < < < < < < < < < < <
                                 String Path = OUT_PATH + "/aln/" + mafTabTemp[1].substring(mafTabTemp[1].lastIndexOf(".") + 1);
@@ -266,7 +268,7 @@ public class MafScanCcr {
 
                                             ScanItFast aln = new ScanItFast(associativeList, alnTab,
                                                     arrayLociChrm, Path, dirProgram + "/" + OUT_PATH, GAPS,
-                                                    SSZBINARY, RSCAPEBINARY, VERBOSE, PRINTALL);
+                                                    SSZBINARY, RSCAPEBINARY, VERBOSE,RSCAPE, PRINTALL);
                                             aln.setSszR(SSZR);
 
                                             Future f = MultiThreads.submit(aln);
@@ -288,13 +290,6 @@ public class MafScanCcr {
                                 }
 
 
-                                /*File index = new File(dirProgram + "/"+ OUT_PATH +"/R-Scape");
-                                String[] entriesRscape = index.list();
-                                for (String s: entriesRscape){
-                                    File currentFile = new File(index.getPath(), s);
-                                    currentFile.delete();
-                                }
-*/
                                 for (Future<Runnable> g : futures) {
                                     try {
                                         g.get();
@@ -307,7 +302,7 @@ public class MafScanCcr {
                                 }
 
                         long endTime = System.nanoTime();
-                        System.out.println("That took"+ (endTime-startTime) +" for program to finish in nanoseconds");
+                       // System.out.println("That took"+ (endTime-startTime) +" for program to finish in nanoseconds");
                             }
 
 
