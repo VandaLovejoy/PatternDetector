@@ -5,7 +5,8 @@
 //  Created by Martin Smith on 27/04/11.
 //  Copyright 2013 All rights reserved.
 //
-import java.util.*; import java.util.concurrent.* ; import java.io.*; import java.math.*; import java.lang.*;
+import java.util.*; import java.util.concurrent.* ; import java.io.*;
+import java.lang.*;
 import java.util.Iterator;
 public class MafScanCcr {
 
@@ -133,7 +134,7 @@ public class MafScanCcr {
                 REALIGN = true;
             } else if (Args[i].equals("-i")) {
                 i++;
-                FILENAME = Args[i].substring(Args[i].lastIndexOf("/") + 1, Args[i].length() - 4);
+                FILENAME = Args[i].substring(Args[i].lastIndexOf("/") + 1);
                 //parse out individual alignment blocks from a multi maf file
                 int lineCount = 0;
                 BufferedReader ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -364,8 +365,9 @@ public class MafScanCcr {
 
     private static void executeCommand(final String command) throws IOException,
             InterruptedException {
+        String[] nameAlifold = FILENAME.split("\\.");
+        String Path = dirProgram + "/" + OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
 
-        String Path = dirProgram + "/" + OUT_PATH + "/stockholm";
         if (!(new File(Path)).isDirectory())
             (new File(Path)).mkdirs();
         System.out.println("Executing command " + command);
