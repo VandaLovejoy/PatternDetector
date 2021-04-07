@@ -286,7 +286,7 @@ public class MafScanCcr {
                                     reader.close();
 
 
-                                    file.delete();
+                                  //  file.delete();
 
 
                                 } catch (FileNotFoundException e) {
