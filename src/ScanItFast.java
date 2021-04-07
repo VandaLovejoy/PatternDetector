@@ -438,8 +438,8 @@ public class ScanItFast implements Runnable {
             try {
                 BufferedWriter WriteClustal = new BufferedWriter(new FileWriter( Aln )),
                         WriteClustalRC = new BufferedWriter(new FileWriter( AlnRC ));
-                WriteClustal.write("CLUSTAL format sucks\n\n") ;
-                WriteClustalRC.write("CLUSTAL format sucks\n\n") ;
+                WriteClustal.write("CLUSTAL format \n\n") ;
+                WriteClustalRC.write("CLUSTAL format \n\n") ;
                 for ( int y = 0 ; y != goodSeqs ; y++ ) {
                    // if ( !isNotUnique[ y ] ) {
                         WriteClustal.write( OutAln[ y ] ) ;

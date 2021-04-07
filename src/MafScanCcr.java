@@ -37,6 +37,7 @@ public class MafScanCcr {
         String[] mafTabTemp;
         String[] TempTab;
         String Temp = "";
+        String[] nameAlifold;
         char[][] AlnTab;
         int blockAln;
         // usage info
@@ -135,6 +136,7 @@ public class MafScanCcr {
             } else if (Args[i].equals("-i")) {
                 i++;
                 FILENAME = Args[i].substring(Args[i].lastIndexOf("/") + 1);
+                nameAlifold = FILENAME.split("\\.");
                 //parse out individual alignment blocks from a multi maf file
                 int lineCount = 0;
                 BufferedReader ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -154,7 +156,7 @@ public class MafScanCcr {
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=300" + " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
 
-                 executeCommand(cmd);
+                 executeCommand(cmd, nameAlifold);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -208,7 +210,8 @@ public class MafScanCcr {
                                 }
                                 finalName += lastDigit;
 
-                                File file = new File(dirProgram + "/" + OUT_PATH + "/stockholm" + "/alifold_"
+                                File file = new File(dirProgram + "/" + OUT_PATH + "/stockholm" +
+                                        nameAlifold[nameAlifold.length - 1]+ "/alifold_"
                                         + finalName + ".stk");
 
 
@@ -309,8 +312,6 @@ public class MafScanCcr {
 
                     }
 
-
-
                 ReadFile.close();
                 MultiThreads.shutdown();
                 MultiThreads.awaitTermination(60 * 10L, TimeUnit.SECONDS);
@@ -363,9 +364,8 @@ public class MafScanCcr {
 
 
 
-    private static void executeCommand(final String command) throws IOException,
+    private static void executeCommand(final String command, String[] nameAlifold) throws IOException,
             InterruptedException {
-        String[] nameAlifold = FILENAME.split("\\.");
         String Path = dirProgram + "/" + OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
 
         if (!(new File(Path)).isDirectory())
