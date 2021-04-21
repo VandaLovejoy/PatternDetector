@@ -7,7 +7,7 @@
 //
 import java.util.*; import java.util.concurrent.* ; import java.io.*;
 import java.lang.*;
-import java.util.Iterator;
+
 public class MafScanCcr {
 
     static int
@@ -33,12 +33,10 @@ public class MafScanCcr {
     public static synchronized void main(String[] Args) throws IOException, InterruptedException {
 
         // variables
-        String[] mafTab;
         String[] mafTabTemp;
         String[] TempTab;
         String Temp = "";
         String[] nameAlifold;
-        char[][] AlnTab;
         ArrayList<int[]> intTab;
         ArrayList<int[]> intTabRC;
         int blockAln;
@@ -142,7 +140,7 @@ public class MafScanCcr {
                 //parse out individual alignment blocks from a multi maf file
                 int lineCount = 0;
                 BufferedReader ReadFile = new BufferedReader(new FileReader(Args[i]));
-                String Line = "";
+                String Line;
                 while ((Line = ReadFile.readLine()) != null)   // count lines for array
                     if (Line.length() > 1 && Line.charAt(0) != '#')
                         lineCount++;
@@ -166,20 +164,18 @@ public class MafScanCcr {
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
-                TempTab = new String[lineCount]; // 7 maf columns
                 // fill in array from file
-                int newLineCount = 0;
                 blockAln = 0;
                 /************************************************************************
                  ****   This stuff is messy, but avoids problems at last block       ****
                  ************************************************************************/
 
                 ExecutorService MultiThreads = Executors.newFixedThreadPool(NTHREDS);
-                List<Future<Runnable>> futures = new ArrayList<Future<Runnable>>();
+                List<Future<Runnable>> futures;
                 readBlocks:
                 while ((Line = ReadFile.readLine()) != null ) {
                     if (Line.length() >= 1 && Line.charAt(0) != '#') {
-                        if (Line != null && Line.length() >= 1 && Line.substring(0, 1).equals("a")) {
+                        if (Line.charAt(0) == 'a') {
                             blockAln++;
                             continue readBlocks;
                         } else if (Line.substring(0, 1).equals("s")) {
@@ -188,8 +184,7 @@ public class MafScanCcr {
                     } else if ((Temp.split("@").length <= 2) && Line.equals("")){
                         Temp = "";
                     }else if ((Temp.split("@").length >= 3) && Line.equals("")) { // at least 3 sequences
-                        TempTab = new String[Temp.split("@").length];
-                                TempTab = Temp.split("@");
+                        TempTab = Temp.split("@");
                                 Temp = "";
 
                                 ArrayList<String[]> associativeList = new ArrayList<>();
@@ -221,7 +216,9 @@ public class MafScanCcr {
 
                                 try {
 
-
+                                    System.out.println("Stockholm file: "+
+                                            file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/")
+                                                    +1));
                                     BufferedReader reader = new BufferedReader(new FileReader(file));
                                     String currentLine = reader.readLine();
 
@@ -265,7 +262,7 @@ public class MafScanCcr {
                                                     + gcSScons;
                                             String[] arrayLociChrm = lociChrm.split(", ");
 
-
+                                            /*
                                             Iterator iter = associativeList.iterator();
                                             ArrayList<char[]> alnTab = new ArrayList<>();
                                             while (iter.hasNext()) {
@@ -302,10 +299,11 @@ public class MafScanCcr {
                                                 intTab.add(seqToInt);
                                                 intTabRC.add(seqToIntRC);
                                             }
+                                            */
 
 
-                                            ScanItFast aln = new ScanItFast(associativeList, alnTab, intTab, intTabRC,
-                                                    arrayLociChrm, Path, dirProgram + "/" + OUT_PATH, GAPS,
+                                            ScanItFast aln = new ScanItFast(associativeList,
+                                                    arrayLociChrm, Path, dirProgram + "/" + OUT_PATH,
                                                     SSZBINARY, RSCAPEBINARY, VERBOSE,RSCAPE, PRINTALL);
                                             aln.setSszR(SSZR);
 
@@ -320,7 +318,7 @@ public class MafScanCcr {
                                     reader.close();
 
 
-                                  //  file.delete();
+                                    file.delete();
 
 
                                 } catch (FileNotFoundException e) {
@@ -391,28 +389,27 @@ public class MafScanCcr {
 
         return cordFinalPlus1;
     }
-    protected static char[] getAlnTab(String[] seq){
-        char[] AlnTab = new char[seq[0].length()];
-        if (seq.length>1 && seq[1].length()> 10) {
-            AlnTab = seq[1].toCharArray();
-        }
-        return AlnTab;
-
-    }
 
 
-
-    private static void executeCommand(final String command, String[] nameAlifold) throws IOException,
-            InterruptedException {
+    private static void executeCommand(final String command, String[] nameAlifold) {
         String Path = dirProgram + "/" + OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
         System.out.println("Executing command " + command);
-        Process process = Runtime.getRuntime().exec(command,null, new File(Path));
+        try {
 
-        BufferedReader reader =
-                new BufferedReader(new InputStreamReader(process.getInputStream()));
-        while ((reader.readLine()) != null) {
+            Process process = Runtime.getRuntime().exec(command, null, new File(Path));
+            InputStream error = process.getInputStream();
+            for(int i=0; i<error.available(); i++){
+                System.out.println(""+ error.read());
+            }
+
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(process.getInputStream()));
+            while ((reader.readLine()) != null) {
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
-        process.waitFor();
 
     }
 
