@@ -162,7 +162,7 @@ public class MafScanCcr {
                 if (!stockhFolder.exists()) {
                     stockhFolder.mkdir();
                 }
-                // executeCommand(cmd, nameAlifold);
+                 executeCommand(cmd, nameAlifold);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -343,12 +343,12 @@ public class MafScanCcr {
 
                     }
                 //Delete file with stockholm info
-                /*String[] entries = stockhFolder.list();
+                String[] entries = stockhFolder.list();
                 for (String s : entries) {
                     File currentFile = new File(stockhFolder.getPath(), s);
                     currentFile.delete();
                 }
-                stockhFolder.delete();*/
+                stockhFolder.delete();
 
                 ReadFile.close();
                 MultiThreads.shutdown();

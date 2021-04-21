@@ -12,7 +12,7 @@ public class ScanItFast implements Runnable {
     ArrayList<char[]> alnTab;
     private static String Path, dirPath, SSZBINARY, RSCAPEBINARY;
     private int[] coordTab;
-    private int goodSeqs, iterate, GAPS, retainedColumns;
+    private int goodSeqs, iterate, GAPS, retainedColumns, outCols;
     private BufferedWriter WriteALN;
     private BufferedReader ReadFile;
     private String[] OutAln, OutAlnRC, FilteredTab, NameTab, TempTab = new String[1];
@@ -26,7 +26,6 @@ public class ScanItFast implements Runnable {
             uniqueComps = 0,
             uniqueSeqs,
             SSZR_THRESHOLD = -3.0,        // alignments scoring below this will be kept (Z-score)
-            outCols,
             percentAlignPower,
             bpCovary,
             totalBasePair;
@@ -154,80 +153,17 @@ public class ScanItFast implements Runnable {
         if (VERBOSE)
             System.out.println("- - -> calculating statistics");
         uniqueSeqs = goodSeqs;
-        outCols = OutAln[0].length() - 25; //change last variable if CLUSTAL properties changes
+        outCols = intTab.get(0).length; //change last variable if CLUSTAL properties changes
         stats = new double[6];
         chars = new double[5];
         totalChars = new double[5];
         pids = new double[goodSeqs][goodSeqs];
         gaps = new double[goodSeqs][goodSeqs]; // gaps (and potentially mismatches)
         isNotUnique = new boolean[goodSeqs];
-       /* // calculate id matrix and mpi
-        for (int k = 25; k != OutAln[0].length() - 1; k++) { // -1 avoids line break char, 25 is clustal seq ID length
-            lines:
-            for (int i = 0; i != goodSeqs; i++) {
-                // initiate gaps[] and pids[] to 0 ???????????????????????
-                if (isNotUnique[i])
-                    continue lines;
-                for (int j = i + 1; j != goodSeqs; j++) {
-                    try {
 
-                        if (OutAln[i].charAt(k) == OutAln[j].charAt(k)) {
-                            // this DP matrix makes shit easy!
-                            if (OutAln[i].charAt(k) == 'A' || OutAln[i].charAt(k) == 'T'
-                                    || OutAln[i].charAt(k) == 'C' || OutAln[i].charAt(k) == 'G'
-                                    || OutAln[i].charAt(k) == 'U') { // U is just in case alignments are RNA
-                                pids[i][j]++;
-                                pids[j][i]++;
-                            }
-                        }
-                        // this ignores "-:-"
-                        else if (OutAln[i].charAt(k) != OutAln[j].charAt(k)) {
-                            pids[j][i]++; // mismatch
-                            if (OutAln[i].charAt(k) == '-' || OutAln[i].charAt(k) == '.')
-                                gaps[i][j]++; // gap
-                            if (OutAln[j].charAt(k) == '-' || OutAln[j].charAt(k) == '.')
-                                gaps[j][i]++; // gap
-                        }
-                    } catch (Exception E) {
-                        E.printStackTrace();
-                        System.err.println("Caught Exception!\n");
-                        System.err.println(i + " " + j + " " + k + " " + OutAln.length + " " + goodSeqs
-                                + " FilteredTab[i]=" + FilteredTab[i].length() + " FilteredTab[j]=" + FilteredTab[j].length());
-                        System.err.println("OutAln[i]=" + OutAln[i].length() + " OutAln[j]=" + OutAln[j].length()
-                                + "\n" + OutAln[i] + "\n" + OutAln[j]);
-                    }
-                    // keep unique seqs ignoring gaps
-                    if (k == OutAln[0].length() - 2) {
-                        if (pids[j][i] - gaps[i][j] == pids[i][j] ||
-                                pids[j][i] - gaps[j][j] == pids[i][j]) {
-                            //both sequences are identical without gaps
-                            //keep the longer one
-                            if (gaps[i][j] > gaps[j][i])
-                                isNotUnique[i] = true;
-                            else
-                                isNotUnique[j] = true; // this should also consider identical seqs
-                        }
-
-                            uniqueComps++;
-                            // old mean pairwise identity ( considers gaps )
-                            mpi = mpi + 100 * pids[i][j] / pids[j][i];
-
-                            // classical average identity
-                            mpi2 = mpi2 + 100 * pids[i][j] / Math.min(OutAln[i].replaceAll("[^ATCGU]", "").length(),
-                                    OutAln[j].replaceAll("[^ATCGU]", "").length());
-
-
-                    }
-                }
-            }
-
-        }
-*/
-
-
-        double [] column = new double[intTab.get(0).length];
+        double [] column = new double[(int) outCols];
         // calculate mpi
-        for (int k = 0; k < intTab.get(0).length; k++) {
+        for (int k = 0; k < outCols; k++) {
             double identicalNuc =0.0;
             double totalNuc =0.0;
             double [][] stats1 = new double[6][6];
@@ -714,7 +650,6 @@ public class ScanItFast implements Runnable {
             } catch (Exception err) {
                 System.out.println(" Caught Error!\n ----> " + Command + "\n  counter--> " );
                 System.err.println("!!!Caught Error!\n ----> " + Command + "\n  counter--> " );
-                //String [] OutAln = new String[ goodSeqs ] ;
                 err.printStackTrace();
                 System.err.println("===============================");
             }
