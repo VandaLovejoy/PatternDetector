@@ -39,6 +39,8 @@ public class MafScanCcr {
         String Temp = "";
         String[] nameAlifold;
         char[][] AlnTab;
+        ArrayList<int[]> intTab;
+        ArrayList<int[]> intTabRC;
         int blockAln;
         // usage info
         if (Args.length == 0) {
@@ -155,8 +157,12 @@ public class MafScanCcr {
 
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=300" + " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
-
-                 executeCommand(cmd, nameAlifold);
+                String Path2 = dirProgram + "/" + OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
+                File stockhFolder = new File(Path2);
+                if (!stockhFolder.exists()) {
+                    stockhFolder.mkdir();
+                }
+                // executeCommand(cmd, nameAlifold);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -182,7 +188,6 @@ public class MafScanCcr {
                     } else if ((Temp.split("@").length <= 2) && Line.equals("")){
                         Temp = "";
                     }else if ((Temp.split("@").length >= 3) && Line.equals("")) { // at least 3 sequences
-                        long startTime = System.nanoTime();
                         TempTab = new String[Temp.split("@").length];
                                 TempTab = Temp.split("@");
                                 Temp = "";
@@ -194,11 +199,10 @@ public class MafScanCcr {
                                 String Path = OUT_PATH + "/aln/" + mafTabTemp[1].substring(mafTabTemp[1].lastIndexOf(".") + 1);
                                 if (!(new File(Path)).isDirectory())
                                     (new File(Path)).mkdirs();
+
                                 int numbZeros = 0;
                                 String gcReference = "";
                                 String gcSScons = "";
-
-                                HashMap<String[], ArrayList> motifs = new HashMap<>();
                                 String lastDigit = "";
                                 String finalName = "";
                                 lastDigit += String.valueOf(blockAln);
@@ -269,8 +273,38 @@ public class MafScanCcr {
                                                 char[] aln = line[1].toCharArray();
                                                 alnTab.add(aln);
                                             }
+                                            Map <Character, Integer> letterMap = new HashMap<>();
+                                            letterMap.put('A', 0);
+                                            letterMap.put('T', 1);
+                                            letterMap.put('C', 2);
+                                            letterMap.put('G', 3);
+                                            letterMap.put('N', 4);
+                                            letterMap.put('-', 5);
+                                            Map <Character, Integer> letterMapRC = new HashMap<>();
+                                            letterMapRC.put('A', 1);
+                                            letterMapRC.put('T', 0);
+                                            letterMapRC.put('C', 3);
+                                            letterMapRC.put('G', 2);
+                                            letterMapRC.put('N', 4);
+                                            letterMapRC.put('-', 5);
 
-                                            ScanItFast aln = new ScanItFast(associativeList, alnTab,
+                                            intTab = new ArrayList<>();
+                                            intTabRC = new ArrayList<>();
+                                            int sizeTab = alnTab.size();
+                                            for(int v = 0; v < sizeTab; v++){
+                                                int[] seqToInt = new int[alnTab.get(v).length];
+                                                int[] seqToIntRC = new int[alnTab.get(v).length];
+                                                for(int w = 0; w < alnTab.get(v).length; w++){
+                                                    char charseq =Character.toUpperCase(alnTab.get(v)[w]);
+                                                    seqToInt[w] = letterMap.get(charseq);
+                                                    seqToIntRC[alnTab.get(v).length  - w - 1] =letterMapRC.get(charseq);
+                                                }
+                                                intTab.add(seqToInt);
+                                                intTabRC.add(seqToIntRC);
+                                            }
+
+
+                                            ScanItFast aln = new ScanItFast(associativeList, alnTab, intTab, intTabRC,
                                                     arrayLociChrm, Path, dirProgram + "/" + OUT_PATH, GAPS,
                                                     SSZBINARY, RSCAPEBINARY, VERBOSE,RSCAPE, PRINTALL);
                                             aln.setSszR(SSZR);
@@ -305,12 +339,16 @@ public class MafScanCcr {
                                     }
                                 }
 
-                        long endTime = System.nanoTime();
-                       // System.out.println("That took"+ (endTime-startTime) +" for program to finish in nanoseconds");
                             }
 
-
                     }
+                //Delete file with stockholm info
+                /*String[] entries = stockhFolder.list();
+                for (String s : entries) {
+                    File currentFile = new File(stockhFolder.getPath(), s);
+                    currentFile.delete();
+                }
+                stockhFolder.delete();*/
 
                 ReadFile.close();
                 MultiThreads.shutdown();
@@ -367,9 +405,6 @@ public class MafScanCcr {
     private static void executeCommand(final String command, String[] nameAlifold) throws IOException,
             InterruptedException {
         String Path = dirProgram + "/" + OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
-
-        if (!(new File(Path)).isDirectory())
-            (new File(Path)).mkdirs();
         System.out.println("Executing command " + command);
         Process process = Runtime.getRuntime().exec(command,null, new File(Path));
 
