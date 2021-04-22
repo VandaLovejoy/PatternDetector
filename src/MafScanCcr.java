@@ -185,82 +185,82 @@ public class MafScanCcr {
                         Temp = "";
                     }else if ((Temp.split("@").length >= 3) && Line.equals("")) { // at least 3 sequences
                         TempTab = Temp.split("@");
-                                Temp = "";
+                        Temp = "";
 
-                                ArrayList<String[]> associativeList = new ArrayList<>();
-                                mafTabTemp = TempTab[0].split("\\s+");
-                                futures = new ArrayList<Future<Runnable>>();
-                                // add Path Flag ? < < < < < < < < < < < < < < < < < < < < < < < < < < < < <
-                                String Path = OUT_PATH + "/aln/" + mafTabTemp[1].substring(mafTabTemp[1].lastIndexOf(".") + 1);
-                                if (!(new File(Path)).isDirectory())
-                                    (new File(Path)).mkdirs();
+                        ArrayList<String[]> associativeList = new ArrayList<>();
+                        mafTabTemp = TempTab[0].split("\\s+");
+                        futures = new ArrayList<Future<Runnable>>();
+                        // add Path Flag ? < < < < < < < < < < < < < < < < < < < < < < < < < < < < <
+                        String Path = OUT_PATH + "/aln/" + mafTabTemp[1].substring(mafTabTemp[1].lastIndexOf(".") + 1);
+                        if (!(new File(Path)).isDirectory())
+                            (new File(Path)).mkdirs();
 
-                                int numbZeros = 0;
-                                String gcReference = "";
-                                String gcSScons = "";
-                                String lastDigit = "";
-                                String finalName = "";
-                                lastDigit += String.valueOf(blockAln);
-                                numbZeros = 4 - lastDigit.length();
-                                int x = 0;
-                                while (x < numbZeros) {
-                                    finalName += String.valueOf(0);
-                                    x++;
-                                }
-                                finalName += lastDigit;
+                        int numbZeros = 0;
+                        String gcReference = "";
+                        String gcSScons = "";
+                        String lastDigit = "";
+                        String finalName = "";
+                        lastDigit += String.valueOf(blockAln);
+                        numbZeros = 4 - lastDigit.length();
+                        int x = 0;
+                        while (x < numbZeros) {
+                            finalName += String.valueOf(0);
+                            x++;
+                        }
+                        finalName += lastDigit;
 
-                                File file = new File(dirProgram + "/" + OUT_PATH + "/stockholm" +
-                                        nameAlifold[nameAlifold.length - 1]+ "/alifold_"
-                                        + finalName + ".stk");
+                        File file = new File(dirProgram + "/" + OUT_PATH + "/stockholm" +
+                                nameAlifold[nameAlifold.length - 1] + "/alifold_"
+                                + finalName + ".stk");
+
+                        if (file.exists()){
+                            try {
+
+                                System.out.println("Stockholm file: " +
+                                        file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/")
+                                                + 1));
+                                BufferedReader reader = new BufferedReader(new FileReader(file));
+                                String currentLine = reader.readLine();
+
+                                String[] arrayName = new String[5];
+                                int lengthAln = 0;
+
+                                readAlns:
+
+                                while (currentLine != null) {
 
 
-                                try {
+                                    if (currentLine.startsWith("#=GF ID ")) {
+                                        arrayName = currentLine.split("[_.]");
+                                        lengthAln = Integer.parseInt(arrayName[4]) -
+                                                Integer.parseInt(arrayName[3]);
+                                        associativeList = new ArrayList<>();
+                                    } else if (currentLine.startsWith("#=GC RF")) {
+                                        String[] lineReference = currentLine.split(" ");
+                                        gcReference = lineReference[lineReference.length - 1];
+                                    } else if (currentLine.startsWith("#=GC SS_cons")) {
+                                        String[] lineReference = currentLine.split(" ");
+                                        gcSScons = lineReference[lineReference.length - 1];
+                                    } else if (currentLine.startsWith("#") || currentLine.equals("")) {
+                                        currentLine = reader.readLine();
+                                        continue readAlns;
 
-                                    System.out.println("Stockholm file: "+
-                                            file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/")
-                                                    +1));
-                                    BufferedReader reader = new BufferedReader(new FileReader(file));
-                                    String currentLine = reader.readLine();
+                                    } else if (lengthAln > 50 && !(currentLine.startsWith("//"))) {
 
-                                    String[] arrayName = new String[5];
-                                    int lengthAln = 0;
+                                        String[] species = currentLine.split(" ", 2);
+                                        species[1] = species[1].trim();
 
-                                    readAlns:
-
-                                    while (currentLine != null) {
-
-
-                                        if (currentLine.startsWith("#=GF ID ")) {
-                                            arrayName = currentLine.split("[_.]");
-                                            lengthAln = Integer.parseInt(arrayName[4]) -
-                                                    Integer.parseInt(arrayName[3]);
-                                            associativeList = new ArrayList<>();
-                                        } else if (currentLine.startsWith("#=GC RF")) {
-                                            String[] lineReference = currentLine.split(" ");
-                                            gcReference = lineReference[lineReference.length - 1];
-                                        } else if (currentLine.startsWith("#=GC SS_cons")) {
-                                            String[] lineReference = currentLine.split(" ");
-                                            gcSScons = lineReference[lineReference.length - 1];
-                                        } else if (currentLine.startsWith("#") || currentLine.equals("")) {
-                                            currentLine = reader.readLine();
-                                            continue readAlns;
-
-                                        } else if (lengthAln > 50 && !(currentLine.startsWith("//"))) {
-
-                                            String[] species = currentLine.split(" ", 2);
-                                            species[1] = species[1].trim();
-
-                                            associativeList.add(species);
-                                        }
-                                        if ((!associativeList.isEmpty()) && currentLine.startsWith("//")) {
-                                            int[] cordMotif = getRealCoordinates(Integer.parseInt(arrayName[3])
-                                                    , mafTabTemp, associativeList.get(0)[1]);
-                                            String loci = Arrays.toString(cordMotif);
-                                            String chrom = mafTabTemp[1].substring((mafTabTemp[1].lastIndexOf(".")) + 1);
-                                            String lociChrm = chrom + ", " + loci.substring(1, loci.length() - 1) + ", " +
-                                                    mafTabTemp[4] + ", " + arrayName[3] + ", " + arrayName[4] + ", " + gcReference + ", "
-                                                    + gcSScons;
-                                            String[] arrayLociChrm = lociChrm.split(", ");
+                                        associativeList.add(species);
+                                    }
+                                    if ((!associativeList.isEmpty()) && currentLine.startsWith("//")) {
+                                        int[] cordMotif = getRealCoordinates(Integer.parseInt(arrayName[3])
+                                                , mafTabTemp, associativeList.get(0)[1]);
+                                        String loci = Arrays.toString(cordMotif);
+                                        String chrom = mafTabTemp[1].substring((mafTabTemp[1].lastIndexOf(".")) + 1);
+                                        String lociChrm = chrom + ", " + loci.substring(1, loci.length() - 1) + ", " +
+                                                mafTabTemp[4] + ", " + arrayName[3] + ", " + arrayName[4] + ", " + gcReference + ", "
+                                                + gcSScons;
+                                        String[] arrayLociChrm = lociChrm.split(", ");
 
                                             /*
                                             Iterator iter = associativeList.iterator();
@@ -302,30 +302,33 @@ public class MafScanCcr {
                                             */
 
 
-                                            ScanItFast aln = new ScanItFast(associativeList,
-                                                    arrayLociChrm, Path, dirProgram + "/" + OUT_PATH,
-                                                    SSZBINARY, RSCAPEBINARY, VERBOSE,RSCAPE, PRINTALL);
-                                            aln.setSszR(SSZR);
+                                        ScanItFast aln = new ScanItFast(associativeList,
+                                                arrayLociChrm, Path, dirProgram + "/" + OUT_PATH,
+                                                SSZBINARY, RSCAPEBINARY, VERBOSE, RSCAPE, PRINTALL);
+                                        aln.setSszR(SSZR);
 
-                                            Future f = MultiThreads.submit(aln);
-                                            futures.add(f);
-                                        }
-                                        currentLine = reader.readLine();
-                                        continue readAlns;
+                                        Future f = MultiThreads.submit(aln);
+                                        futures.add(f);
                                     }
-
-
-                                    reader.close();
-
-
-                                    file.delete();
-
-
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
+                                    currentLine = reader.readLine();
+                                    continue readAlns;
                                 }
 
 
+                                reader.close();
+
+
+                                  file.delete();
+
+
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+
+                    } else {
+                            System.out.println("File: "+ file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/")
+                                    + 1) + "does not exist");
+                        }
                                 for (Future<Runnable> g : futures) {
                                     try {
                                         g.get();

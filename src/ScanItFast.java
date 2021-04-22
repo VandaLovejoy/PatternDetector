@@ -5,6 +5,7 @@ public class ScanItFast implements Runnable {
     static boolean VERBOSE = false,
             PRINTALL = false,
             RSCAPE = false;
+    private ArrayList<int[]> intTabNoGaps;
     private ArrayList<int[]> intTab;
     private ArrayList<int[]> intTabRC;
     private final String[] key;
@@ -17,6 +18,7 @@ public class ScanItFast implements Runnable {
             private double percentAlignPower;
     private double bpCovary;
     private double totalBasePair;
+
 
     ScanItFast(ArrayList associativeList, String[] key, String Path, String dirPath,
                String SSZBINARY, String RSCAPEBINARY, boolean VERBOSE, boolean RSCAPE, boolean PRINTALL) {
@@ -40,14 +42,8 @@ public class ScanItFast implements Runnable {
         }
 
         int startPos = Integer.parseInt(key[1]);
-        // remove identical rows or those with too many gaps & N's
-        Iterator iter = associativeList.iterator();
-        ArrayList<char[]> alnTab = new ArrayList<>();
-        while (iter.hasNext()) {
-            String[] line = (String[]) iter.next();
-            char[] aln = line[1].toCharArray();
-            alnTab.add(aln);
-        }
+
+
         Map <Character, Integer> letterMap = new HashMap<>();
         letterMap.put('A', 0);
         letterMap.put('T', 1);
@@ -62,40 +58,79 @@ public class ScanItFast implements Runnable {
         letterMapRC.put('G', 2);
         letterMapRC.put('N', 4);
         letterMapRC.put('-', 5);
-
+        // remove identical rows or those with too many gaps & N's
+        Iterator iter = associativeList.iterator();
+        ArrayList<char[]> alnTab = new ArrayList<>();
+        ArrayList<char[]> alnTabNoGaps = new ArrayList<>();
+        intTabNoGaps = new ArrayList<>();
         intTab = new ArrayList<>();
         intTabRC = new ArrayList<>();
-        int sizeTab = alnTab.size();
+        ArrayList UniqueNames = new ArrayList();
+        while (iter.hasNext()) {
+            String[] line = (String[]) iter.next();
+            String lineNoGap = line[1].replaceAll("[^ATCGUatcgu]", "").toUpperCase();
+            String sequence = line[1].toUpperCase();
+            int[] seqToInt = new int[sequence.length()];
+            int[] seqToIntRC = new int[sequence.length()];
+            int[] seqToIntNoGap = new int[lineNoGap.length()];
+            for (int i = 0; i < sequence.length(); i++) {
+                seqToInt[i] = letterMap.get(sequence.charAt(i));
+                seqToIntRC[sequence.length() - i - 1] = letterMapRC.get(sequence.charAt(i));
+
+            }
+            for (int j = 0; j < lineNoGap.length(); j++) {
+                int nuc = letterMap.get(lineNoGap.charAt(j));
+                seqToInt[j] = nuc;
+                if (nuc != 4 || nuc != 5) {
+                    seqToIntNoGap[j] = nuc;
+                }
+            }
+            if (seqToIntNoGap.length > 0){
+                intTabNoGaps.add(seqToIntNoGap);
+                UniqueNames.add(line[0]);
+                intTabRC.add(seqToIntRC);
+                intTab.add(seqToInt);
+            }
+        }
+        /*    char[] aln = line[1].toCharArray();
+            alnTab.add(aln);
+            String lineNoGap = line[1].replaceAll("[^ATCGUatcgu]", "");
+            alnTabNoGaps.add(lineNoGap.toCharArray());
+        }*/
+
+
+       /* int sizeTab = alnTab.size();
+        Set<String> UniqueNames = new LinkedHashSet<String>();
         for(int v = 0; v < sizeTab; v++){
             int[] seqToInt = new int[alnTab.get(v).length];
             int[] seqToIntRC = new int[alnTab.get(v).length];
             for(int w = 0; w < alnTab.get(v).length; w++){
-                char charseq =Character.toUpperCase(alnTab.get(v)[w]);
+                char charseq = Character.toUpperCase(alnTab.get(v)[w]);
                 seqToInt[w] = letterMap.get(charseq);
                 seqToIntRC[alnTab.get(v).length  - w - 1] =letterMapRC.get(charseq);
-            }
-            intTab.add(seqToInt);
-            intTabRC.add(seqToIntRC);
-        }
 
-        ArrayList Uniques = new ArrayList();
-        ArrayList<String> UniquesWithGaps = new ArrayList();
+            }
+                intTab.add(seqToInt);
+                intTabRC.add(seqToIntRC);
+            }
+        }*/
+
+
+        /*ArrayList<int[]> UniquesWithGaps = new ArrayList();
         Set<String> UniqueNames = new LinkedHashSet<String>();
-        for (int seq = 0; seq != alnTab.size(); seq++) {
-            String DegappedWindow = new String(alnTab.get(seq)).replaceAll("[^ATCGUatcgu]", "").toUpperCase();
+        for (int seq = 0; seq != intTabNoGaps.size(); seq++) {
             // only retains non-identical unaligned sequences with at least one character
-            if (DegappedWindow.length() > 0 && UniqueNames.add(associativeList.get(seq)[0])) {
-                Uniques.add(DegappedWindow);
-                UniquesWithGaps.add(new String(alnTab.get(seq)).toUpperCase());
+            if (intTabNoGaps.get(seq).length > 0 && UniqueNames.add(associativeList.get(seq)[0])) {
+                UniquesWithGaps.add(intTabNoGaps.get(seq));
             }
-        }
+        }*/
 
-        String[] filteredTab = new String[UniquesWithGaps.size()]; // creating an Array from Hash
-        filteredTab = UniquesWithGaps.toArray(filteredTab);
-        String[] nameTab = new String[UniquesWithGaps.size()];
-        nameTab = UniqueNames.toArray(nameTab);
+      //  String[] filteredTab = new String[intTab.size()]; // creating an Array from Hash
+       // filteredTab = intTab.toArray(filteredTab);
+        String[] nameTab = new String[UniqueNames.size()];
+        nameTab = (String[]) UniqueNames.toArray(nameTab);
 // first check for > 2 seqs
-        int goodSeqs = UniquesWithGaps.size();
+        int goodSeqs = intTab.size();
         if (goodSeqs <= 3) {
             if (VERBOSE)
                 System.out.println("-> Not Enough seqs ");
@@ -105,9 +140,9 @@ public class ScanItFast implements Runnable {
         // remove gappy sequences
         if (VERBOSE)
             System.out.println("- -> Gappy sequences");
-        boolean[] keepMe = new boolean[filteredTab.length];
-        for (int seq = 0; seq != filteredTab.length; seq++) {
-            if (filteredTab[seq].replaceAll("[^ATCGUatcgu]", "").length() >= (int) (filteredTab[seq].length() * ((double) 50 / 100))) {
+        boolean[] keepMe = new boolean[intTab.size()];
+        for (int seq = 0; seq != intTab.size(); seq++) {
+            if (intTabNoGaps.get(seq).length >= intTab.get(seq).length * ((double) 50 / 100)) {
                 keepMe[seq] = true;
             } else {
                 keepMe[seq] = false;
@@ -128,8 +163,8 @@ public class ScanItFast implements Runnable {
         // check for gap-only columns
         if (VERBOSE)
             System.out.println("- -> Gap only columns");
-        boolean[] hasChars = new boolean[filteredTab[0].length()];
-        gapScan:
+        boolean[] hasChars = new boolean[intTab.get(0).length];
+        /*gapScan:
         for (int col = 0; col < filteredTab[0].length(); col++) {
             for (int seq = 0; seq != filteredTab.length; seq++) {
                 if (keepMe[seq]) {
@@ -142,27 +177,9 @@ public class ScanItFast implements Runnable {
             }
             if (!hasChars[col])
                 ;
-        }
+        }*/
 
-        // prepare clustalw file
-        if (VERBOSE)
-            System.out.println("- -> preparing Clustal format");
-        String[] outAln = new String[goodSeqs];
-        String[] outAlnRC = new String[goodSeqs];
-        int iterate = 0;
-        for (int seq = 0; seq != filteredTab.length; seq++) { //removed x < goodseqs
-            if ( keepMe[ seq ] ) {
-                outAln[iterate] = nameTab[seq].substring(0, Math.min(nameTab[seq].length(), 20));
-                for (int i = 0; i != 25 - Math.min(nameTab[seq].length(), 20); i++)
-                    outAln[iterate] = outAln[iterate] + " ";
-                for (int i = 0; i != filteredTab[0].length(); i++)
-                    if (hasChars[i])
-                        outAln[iterate] = outAln[iterate] + filteredTab[seq].charAt(i);
-                outAln[iterate] = outAln[iterate] + "\n";
-                iterate++;
 
-            }
-        }
 //*********************************************************************
         //					calculate stats						*
         //*********************************************************************
@@ -196,6 +213,14 @@ public class ScanItFast implements Runnable {
                 }
             }
             column[k]= identicalNuc/totalNuc;
+            double totalGaps = 0.0;
+            for (int i=0; i< stats1.length; i++) {
+                totalGaps += stats1[i][4] + stats1[i][5];
+            }
+            if (totalNuc != totalGaps){
+                hasChars[k] = true;
+            }
+
         }
         double sum=0.0;
         for(int v =0; v <column.length; v++){
@@ -225,6 +250,42 @@ public class ScanItFast implements Runnable {
         }
 
     }
+        Map<Integer, Character> reverseMap = new HashMap<>();
+        reverseMap.put(0,'A');
+        reverseMap.put(1,'T');
+        reverseMap.put(2,'C');
+        reverseMap.put(3,'G');
+        reverseMap.put(4,'N');
+        reverseMap.put(5,'-');
+
+        // prepare clustalw file
+        if (VERBOSE)
+            System.out.println("- -> preparing Clustal format");
+        String[] outAln = new String[goodSeqs];
+        String[] outAlnRC = new String[goodSeqs];
+        int iterate = 0;
+        for (int seq = 0; seq < intTab.size() ; seq++) { //removed x < goodseqs
+            if ( keepMe[ seq ] ) {
+                outAln[iterate] = nameTab[seq].substring(0, Math.min(nameTab[seq].length(), 20));
+                outAlnRC[iterate] = nameTab[seq].substring(0, Math.min(nameTab[seq].length(), 20));
+                for (int i = 0; i != 25 - Math.min(nameTab[seq].length(), 20); i++) {
+                    outAln[iterate] = outAln[iterate] + " ";
+                    outAlnRC[iterate] = outAlnRC[iterate] + " ";
+                }
+                for (int i = 0; i != intTab.get(0).length; i++) {
+                    if (hasChars[i]) {
+                        outAln[iterate] = outAln[iterate] + reverseMap.get(intTab.get(seq)[i]);
+                    }
+                    if (hasChars[intTabRC.get(0).length - i - 1]) {
+                        outAlnRC[iterate] = outAlnRC[iterate] + reverseMap.get(intTabRC.get(seq)[i]);
+                    }
+                }
+                outAln[iterate] = outAln[iterate] + "\n";
+                outAlnRC[iterate] = outAlnRC[iterate] + "\n";
+                iterate++;
+
+            }
+        }
 
        // System.out.println( uniqueSeqs +"\t"+goodSeqs+"\t"+outCols+"\t"+totalChars[4]+"\t"+( outCols * goodSeqs));
         stats[0] = newMPI * 100;                                                                        // Mean Pairwise ID
@@ -238,13 +299,6 @@ public class ScanItFast implements Runnable {
         stats[3] = 100 * (totalChars[2] + totalChars[3]) / (totalChars[0] + totalChars[1] + totalChars[2] + totalChars[3]);       // GC content
         stats[4] = 100 * totalChars[4] / (outCols * goodSeqs);                                          // GAP content
 
-        Map<Integer, Character> reverseMap = new HashMap<>();
-        reverseMap.put(0,'A');
-        reverseMap.put(1,'T');
-        reverseMap.put(2,'C');
-        reverseMap.put(3,'G');
-        reverseMap.put(4,'N');
-        reverseMap.put(5,'-');
 
 
 
@@ -367,6 +421,9 @@ public class ScanItFast implements Runnable {
         }
         theDir.delete();
     }
+
+
+
         // save BED coords
         if (VERBOSE)
             System.out.println("- -> Calculating BED coords ");
@@ -389,8 +446,9 @@ public class ScanItFast implements Runnable {
         File Aln = new File(absolutePath+ "/"+Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(absolutePath+ "/"+Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
-        if (outCols > (filteredTab[0].length()) / 2 && stats[4] <= 75 && stats[0] > 60){
-         //   !(percentAlignPower > 10 && bpCovary < 2) && totalBasePair != 0.0 &&
+        if ( stats[4] <= 75 && stats[0] > 60){
+         //    outCols > (filteredTab[0].length()
+            //    !(percentAlignPower > 10 && bpCovary < 2) && totalBasePair != 0.0 &&
             // Write Sequences to ALN Format
             try {
                 BufferedWriter WriteClustal = new BufferedWriter(new FileWriter( Aln )),
@@ -399,13 +457,13 @@ public class ScanItFast implements Runnable {
                 WriteClustalRC.write("CLUSTAL format \n\n") ;
 
                 for (int y = 0; y != goodSeqs; y++ ) {
-                    StringBuilder sequenceRC = new StringBuilder();
-                    for(int w = 0; w < alnTab.get(y).length; w++) {
+                   // StringBuilder sequenceRC = new StringBuilder();
+                    /*for(int w = 0; w < alnTab.get(y).length; w++) {
                         char nucReverse = reverseMap.get(intTabRC.get(y)[w]);
                         sequenceRC.append(nucReverse);
-                    }
+                    }*/
                         WriteClustal.write( outAln[ y ] ) ;
-                        outAlnRC[ y ] = outAln[ y ].substring(0,25)+ sequenceRC +"\n";
+                       // outAlnRC[ y ] = outAln[ y ].substring(0,25)+ sequenceRC +"\n";
                         WriteClustalRC.write( outAlnRC[ y ] ) ;
                 }
                 WriteClustal.close() ;
