@@ -160,7 +160,7 @@ public class MafScanCcr {
                 if (!stockhFolder.exists()) {
                     stockhFolder.mkdir();
                 }
-               //  executeCommand(cmd, nameAlifold);
+                 executeCommand(cmd, nameAlifold);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -279,7 +279,7 @@ public class MafScanCcr {
                                 reader.close();
 
 
-                                //  file.delete();
+                                  file.delete();
 
 
                             } catch (FileNotFoundException e) {
