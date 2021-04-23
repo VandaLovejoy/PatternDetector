@@ -160,7 +160,7 @@ public class MafScanCcr {
                 if (!stockhFolder.exists()) {
                     stockhFolder.mkdir();
                 }
-                 executeCommand(cmd, nameAlifold);
+               //  executeCommand(cmd, nameAlifold);
 
 
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
@@ -262,45 +262,6 @@ public class MafScanCcr {
                                                 + gcSScons;
                                         String[] arrayLociChrm = lociChrm.split(", ");
 
-                                            /*
-                                            Iterator iter = associativeList.iterator();
-                                            ArrayList<char[]> alnTab = new ArrayList<>();
-                                            while (iter.hasNext()) {
-                                                String[] line = (String[]) iter.next();
-                                                char[] aln = line[1].toCharArray();
-                                                alnTab.add(aln);
-                                            }
-                                            Map <Character, Integer> letterMap = new HashMap<>();
-                                            letterMap.put('A', 0);
-                                            letterMap.put('T', 1);
-                                            letterMap.put('C', 2);
-                                            letterMap.put('G', 3);
-                                            letterMap.put('N', 4);
-                                            letterMap.put('-', 5);
-                                            Map <Character, Integer> letterMapRC = new HashMap<>();
-                                            letterMapRC.put('A', 1);
-                                            letterMapRC.put('T', 0);
-                                            letterMapRC.put('C', 3);
-                                            letterMapRC.put('G', 2);
-                                            letterMapRC.put('N', 4);
-                                            letterMapRC.put('-', 5);
-
-                                            intTab = new ArrayList<>();
-                                            intTabRC = new ArrayList<>();
-                                            int sizeTab = alnTab.size();
-                                            for(int v = 0; v < sizeTab; v++){
-                                                int[] seqToInt = new int[alnTab.get(v).length];
-                                                int[] seqToIntRC = new int[alnTab.get(v).length];
-                                                for(int w = 0; w < alnTab.get(v).length; w++){
-                                                    char charseq =Character.toUpperCase(alnTab.get(v)[w]);
-                                                    seqToInt[w] = letterMap.get(charseq);
-                                                    seqToIntRC[alnTab.get(v).length  - w - 1] =letterMapRC.get(charseq);
-                                                }
-                                                intTab.add(seqToInt);
-                                                intTabRC.add(seqToIntRC);
-                                            }
-                                            */
-
 
                                         ScanItFast aln = new ScanItFast(associativeList,
                                                 arrayLociChrm, Path, dirProgram + "/" + OUT_PATH,
@@ -318,7 +279,7 @@ public class MafScanCcr {
                                 reader.close();
 
 
-                                  file.delete();
+                                //  file.delete();
 
 
                             } catch (FileNotFoundException e) {

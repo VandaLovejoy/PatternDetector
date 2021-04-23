@@ -60,8 +60,7 @@ public class ScanItFast implements Runnable {
         letterMapRC.put('-', 5);
         // remove identical rows or those with too many gaps & N's
         Iterator iter = associativeList.iterator();
-        ArrayList<char[]> alnTab = new ArrayList<>();
-        ArrayList<char[]> alnTabNoGaps = new ArrayList<>();
+
         intTabNoGaps = new ArrayList<>();
         intTab = new ArrayList<>();
         intTabRC = new ArrayList<>();
@@ -80,7 +79,6 @@ public class ScanItFast implements Runnable {
             }
             for (int j = 0; j < lineNoGap.length(); j++) {
                 int nuc = letterMap.get(lineNoGap.charAt(j));
-                seqToInt[j] = nuc;
                 if (nuc != 4 || nuc != 5) {
                     seqToIntNoGap[j] = nuc;
                 }
@@ -92,41 +90,7 @@ public class ScanItFast implements Runnable {
                 intTab.add(seqToInt);
             }
         }
-        /*    char[] aln = line[1].toCharArray();
-            alnTab.add(aln);
-            String lineNoGap = line[1].replaceAll("[^ATCGUatcgu]", "");
-            alnTabNoGaps.add(lineNoGap.toCharArray());
-        }*/
 
-
-       /* int sizeTab = alnTab.size();
-        Set<String> UniqueNames = new LinkedHashSet<String>();
-        for(int v = 0; v < sizeTab; v++){
-            int[] seqToInt = new int[alnTab.get(v).length];
-            int[] seqToIntRC = new int[alnTab.get(v).length];
-            for(int w = 0; w < alnTab.get(v).length; w++){
-                char charseq = Character.toUpperCase(alnTab.get(v)[w]);
-                seqToInt[w] = letterMap.get(charseq);
-                seqToIntRC[alnTab.get(v).length  - w - 1] =letterMapRC.get(charseq);
-
-            }
-                intTab.add(seqToInt);
-                intTabRC.add(seqToIntRC);
-            }
-        }*/
-
-
-        /*ArrayList<int[]> UniquesWithGaps = new ArrayList();
-        Set<String> UniqueNames = new LinkedHashSet<String>();
-        for (int seq = 0; seq != intTabNoGaps.size(); seq++) {
-            // only retains non-identical unaligned sequences with at least one character
-            if (intTabNoGaps.get(seq).length > 0 && UniqueNames.add(associativeList.get(seq)[0])) {
-                UniquesWithGaps.add(intTabNoGaps.get(seq));
-            }
-        }*/
-
-      //  String[] filteredTab = new String[intTab.size()]; // creating an Array from Hash
-       // filteredTab = intTab.toArray(filteredTab);
         String[] nameTab = new String[UniqueNames.size()];
         nameTab = (String[]) UniqueNames.toArray(nameTab);
 // first check for > 2 seqs
@@ -164,20 +128,6 @@ public class ScanItFast implements Runnable {
         if (VERBOSE)
             System.out.println("- -> Gap only columns");
         boolean[] hasChars = new boolean[intTab.get(0).length];
-        /*gapScan:
-        for (int col = 0; col < filteredTab[0].length(); col++) {
-            for (int seq = 0; seq != filteredTab.length; seq++) {
-                if (keepMe[seq]) {
-                    if (filteredTab[seq].charAt(col) == 'A' || filteredTab[seq].charAt(col) == 'C'
-                            || filteredTab[seq].charAt(col) == 'T' || filteredTab[seq].charAt(col) == 'G') {
-                        hasChars[col] = true;
-                        continue gapScan;
-                    }
-                }
-            }
-            if (!hasChars[col])
-                ;
-        }*/
 
 
 //*********************************************************************
@@ -293,12 +243,11 @@ public class ScanItFast implements Runnable {
         for (int i = 0; i < column.length; i++){
                 var = var + (double) Math.pow(column[i] - newMPI, 2);
         }
-        double standard = Math.sqrt(var/column.length);
+        double standard = Math.sqrt(var/(column.length -1));
         stats[1] = standard;                        // Variance
         stats[2] = -1 * shannon / ((double) outCols);       // Normalized Shanon entropy
         stats[3] = 100 * (totalChars[2] + totalChars[3]) / (totalChars[0] + totalChars[1] + totalChars[2] + totalChars[3]);       // GC content
-        stats[4] = 100 * totalChars[4] / (outCols * goodSeqs);                                          // GAP content
-
+        stats[4] = 100 * totalChars[4] / (outCols * goodSeqs);// GAP content
 
 
 
@@ -457,13 +406,8 @@ public class ScanItFast implements Runnable {
                 WriteClustalRC.write("CLUSTAL format \n\n") ;
 
                 for (int y = 0; y != goodSeqs; y++ ) {
-                   // StringBuilder sequenceRC = new StringBuilder();
-                    /*for(int w = 0; w < alnTab.get(y).length; w++) {
-                        char nucReverse = reverseMap.get(intTabRC.get(y)[w]);
-                        sequenceRC.append(nucReverse);
-                    }*/
+
                         WriteClustal.write( outAln[ y ] ) ;
-                       // outAlnRC[ y ] = outAln[ y ].substring(0,25)+ sequenceRC +"\n";
                         WriteClustalRC.write( outAlnRC[ y ] ) ;
                 }
                 WriteClustal.close() ;
@@ -685,8 +629,7 @@ public class ScanItFast implements Runnable {
                                 // avoid infinity loop
                                 if (SissizErr.ready()) {
                                     Error = SissizErr.readLine();
-/*
-*/
+
                                 }
                             }
                         }
