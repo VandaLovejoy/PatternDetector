@@ -474,6 +474,7 @@ public class ScanItFast implements Runnable {
                             bpCovary + "\t" + totalBasePair);
                 }else {
                     System.out.println(FinalBedFile.replaceAll("_", "\t"));
+
                 }
                 File NewFile = new File(absolutePath+ "/"+Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln");
                 int file_count = 0;

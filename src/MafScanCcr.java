@@ -279,7 +279,7 @@ public class MafScanCcr {
                                 reader.close();
 
 
-                                  file.delete();
+                               //   file.delete();
 
 
                             } catch (FileNotFoundException e) {
@@ -288,7 +288,7 @@ public class MafScanCcr {
 
                     } else {
                             System.out.println("File: "+ file.getAbsolutePath().substring(file.getAbsolutePath().lastIndexOf("/")
-                                    + 1) + "does not exist");
+                                    + 1) + " does not exist");
                         }
                                 for (Future<Runnable> g : futures) {
                                     try {
@@ -306,9 +306,11 @@ public class MafScanCcr {
                     }
                 //Delete file with stockholm info
                 String[] entries = stockhFolder.list();
-                for (String s : entries) {
-                    File currentFile = new File(stockhFolder.getPath(), s);
-                    currentFile.delete();
+                if (entries.length > 0) {
+                    for (String s : entries) {
+                        File currentFile = new File(stockhFolder.getPath(), s);
+                        currentFile.delete();
+                    }
                 }
                 stockhFolder.delete();
 
