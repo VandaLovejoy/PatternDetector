@@ -37,8 +37,6 @@ public class MafScanCcr {
         String[] TempTab;
         String Temp = "";
         String[] nameAlifold;
-        ArrayList<int[]> intTab;
-        ArrayList<int[]> intTabRC;
         int blockAln;
         // usage info
         if (Args.length == 0) {
@@ -279,7 +277,7 @@ public class MafScanCcr {
                                 reader.close();
 
 
-                               //   file.delete();
+                                  file.delete();
 
 
                             } catch (FileNotFoundException e) {
