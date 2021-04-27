@@ -379,11 +379,11 @@ public class ScanItFast implements Runnable {
         String BedFile = key[0] + "\t";
         BedFile = BedFile + key[1] + "\t" + key[2] + "\t";
 
-        BedFile = BedFile + goodSeqs + ":" + ((double) (int) (10 * stats[0]) / 10) + ":"      // MPI
-                + ((double) (int) (10 * stats[1]) / 10) + ":"            // STDEV
-                + ((double) (int) (100 * stats[2]) / 100) + ":"                // SHANNON
-                + ((double) (int) (10 * stats[3]) / 10) + ":"                  //      GC
-                + ((double) (int) (10 * stats[4]) / 10) + ":";                     // GAPS
+        BedFile = BedFile + goodSeqs + "\t" + ((double) (int) (10 * stats[0]) / 10) + "\t"      // MPI
+                + ((double) (int) (10 * stats[1]) / 10) + "\t"            // STDEV
+                + ((double) (int) (100 * stats[2]) / 100) + "\t"                // SHANNON
+                + ((double) (int) (10 * stats[3]) / 10) + "\t"                  //      GC
+                + ((double) (int) (10 * stats[4]) / 10);                     // GAPS
 
 
 
@@ -460,7 +460,7 @@ public class ScanItFast implements Runnable {
         if (SissizOutTab == null || SissizOutTab[10] == null) {
             Aln.delete();
         } else {
-            FinalBedFile = BedFile + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
+            FinalBedFile = BedFile + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
             // delete low scoring alignments
             if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 Aln.delete();
@@ -504,7 +504,7 @@ public class ScanItFast implements Runnable {
         if (SissizOutTab == null || SissizOutTab[10] == null) {
             AlnRC.delete();
         } else {
-            FinalBedFileRC = BedFile + SissizOutTab[1] + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + Antisense;
+            FinalBedFileRC = BedFile + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + Antisense;
             // delete low scoring alignments
             if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 AlnRC.delete();
