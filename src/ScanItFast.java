@@ -390,10 +390,9 @@ public class ScanItFast implements Runnable {
 
         if (VERBOSE)
             System.out.println("Pre SISSIz bed file: \n" + " " + BedFile);
-        String absolutePath = System.getProperty(("user.dir"));
         int random = (int) ((double) 10000 * Math.random());
-        File Aln = new File(absolutePath+ "/"+Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
-                AlnRC = new File(absolutePath+ "/"+Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
+        File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
+                AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
         if ( stats[4] <= 75 && stats[0] > 60){
          //    outCols > (filteredTab[0].length()
@@ -442,7 +441,7 @@ public class ScanItFast implements Runnable {
 
 
         try {
-            SissizOutTab = ScanSSZ( absolutePath+ "/" + Path, BedFile, random);
+            SissizOutTab = ScanSSZ( Path, BedFile, random);
             if (SissizOutTab == null) { // timeout
                 Aln.delete();
             }
@@ -476,18 +475,18 @@ public class ScanItFast implements Runnable {
                     System.out.println(FinalBedFile.replaceAll("_", "\t"));
 
                 }
-                File NewFile = new File(absolutePath+ "/"+Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln");
+                File NewFile = new File(Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln");
                 int file_count = 0;
                 while (NewFile.exists()) {
                     file_count++;
-                    NewFile = new File(absolutePath+ "/"+Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln_" + file_count);
+                    NewFile = new File(Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln_" + file_count);
                 }
                 boolean result = Aln.renameTo(NewFile);
             }
         }
         // * * * * * *  now for the RC  * * * * * *
         try {
-            SissizOutTab = ScanSSZ(absolutePath+ "/" + Path, BedFile + "rc", random);
+            SissizOutTab = ScanSSZ( Path, BedFile + "rc", random);
             if (SissizOutTab == null) {
                 AlnRC.delete();
             }
@@ -519,11 +518,11 @@ public class ScanItFast implements Runnable {
                     //write bedRC and rename alignment
                     System.out.println(FinalBedFileRC.replaceAll("_", "\t"));
                 }
-                File NewFile = new File(absolutePath+ "/" + Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln");
+                File NewFile = new File( Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln");
                 int file_count = 0;
                 while (NewFile.exists()) {
                     file_count++;
-                    NewFile = new File(absolutePath+ "/" + Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln_" + file_count);
+                    NewFile = new File( Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln_" + file_count);
                 }
                 boolean result = AlnRC.renameTo(NewFile);
             }

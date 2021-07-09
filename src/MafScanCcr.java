@@ -23,8 +23,8 @@ public class MafScanCcr {
             FILENAME = "",
             OUT_PATH = "",
             dirProgram = "",
-            SSZBINARY = "/usr/bin/SISSIz",
-            ALIFOLDBINARY = "~/usr/local/bin/RNALalifold",
+            SSZBINARY = "~/SISSIz-master/src/SISSIz",
+            ALIFOLDBINARY = "~/ViennaRNA-2.4.16/bin/RNALalifold",
             RSCAPEBINARY = "/usr/bin/R-scape";
 
     static double SSZR = -3.0;
@@ -96,11 +96,11 @@ public class MafScanCcr {
 
         GetBinary = Runtime.getRuntime().exec("which R-scape") ;
         ReadBin = new BufferedReader(new InputStreamReader(GetBinary.getInputStream()));
-        if ( (RSCAPEBINARY = ReadBin.readLine() ) == null ) {
+      /*  if ( (RSCAPEBINARY = ReadBin.readLine() ) == null ) {
             System.out.println("Please install R-scape, and link it to your $PATH" );
             System.exit(0);
         }
-
+*/
         ReadBin.close();
 
         // parse arguments
@@ -114,8 +114,8 @@ public class MafScanCcr {
             } else if (Args[i].equals("-g")) {  // gap content
                 GAPS = Integer.parseInt(Args[i + 1]);
                 i++;
-            } else if (Args[i].equals("-o")) { //output directory
-                OUT_PATH = Args[i + 1];
+            } else if (Args[i].equals("-o")) {//output directory
+                OUT_PATH = System.getProperty("user.dir") + "/"+ Args[i + 1];
                 if (!(new File(OUT_PATH)).isDirectory())
                     (new File(OUT_PATH)).mkdirs();
                 if (VERBOSE)
@@ -150,13 +150,12 @@ public class MafScanCcr {
                 /************************************************************************
                  ****   RNALalifold       ****
                  ************************************************************************/
-
                 String cmd = ALIFOLDBINARY + " --id-prefix=alifold" + " --noLP" + " --maxBPspan=300" + " --ribosum_scoring"
                         + " --aln-stk " + Args[Args.length - 1];
-                String Path2 = dirProgram + "/" + OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
-                File stockhFolder = new File(Path2);
-                if (!stockhFolder.exists()) {
-                    stockhFolder.mkdir();
+                String Path2 =  OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
+                File stockholmFolder = new File(Path2);
+                if (!stockholmFolder.exists()) {
+                    stockholmFolder.mkdir();
                 }
                  executeCommand(cmd, nameAlifold);
 
@@ -207,7 +206,7 @@ public class MafScanCcr {
                         }
                         finalName += lastDigit;
 
-                        File file = new File(dirProgram + "/" + OUT_PATH + "/stockholm" +
+                        File file = new File( OUT_PATH + "/stockholm" +
                                 nameAlifold[nameAlifold.length - 1] + "/alifold_"
                                 + finalName + ".stk");
 
@@ -262,7 +261,7 @@ public class MafScanCcr {
 
 
                                         ScanItFast aln = new ScanItFast(associativeList,
-                                                arrayLociChrm, Path, dirProgram + "/" + OUT_PATH,
+                                                arrayLociChrm, Path, OUT_PATH,
                                                 SSZBINARY, RSCAPEBINARY, VERBOSE, RSCAPE, PRINTALL);
                                         aln.setSszR(SSZR);
 
@@ -303,14 +302,14 @@ public class MafScanCcr {
 
                     }
                 //Delete file with stockholm info
-                String[] entries = stockhFolder.list();
+                String[] entries = stockholmFolder.list();
                 if (entries.length > 0) {
                     for (String s : entries) {
-                        File currentFile = new File(stockhFolder.getPath(), s);
+                        File currentFile = new File(stockholmFolder.getPath(), s);
                         currentFile.delete();
                     }
                 }
-                stockhFolder.delete();
+                stockholmFolder.delete();
 
                 ReadFile.close();
                 MultiThreads.shutdown();
@@ -356,7 +355,7 @@ public class MafScanCcr {
 
 
     private static void executeCommand(final String command, String[] nameAlifold) {
-        String Path = dirProgram + "/" + OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
+        String Path = OUT_PATH + "/stockholm" + nameAlifold[nameAlifold.length - 1];
         System.out.println("Executing command " + command);
         try {
 
