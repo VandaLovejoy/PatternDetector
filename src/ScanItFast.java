@@ -394,7 +394,7 @@ public class ScanItFast implements Runnable {
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
-        if ( stats[4] <= 75 && stats[0] > 60){
+     //  if ( stats[4] <= 75 && stats[0] > 60){
          //    outCols > (filteredTab[0].length()
             //    !(percentAlignPower > 10 && bpCovary < 2) && totalBasePair != 0.0 &&
             // Write Sequences to ALN Format
@@ -419,7 +419,7 @@ public class ScanItFast implements Runnable {
                 AlnRC.delete() ;
                 return;
             }
-        } else {
+       /* } else {
             if (VERBOSE) {
                 System.out.println("---> rejected alignment");
                 System.out.println("     outcols = " + outCols + "\tuniqueseqs = " + uniqueSeqs +
@@ -430,7 +430,7 @@ public class ScanItFast implements Runnable {
             Aln.delete();
             AlnRC.delete();
             return;
-        }
+       }*/
         String FinalBedFile,
                 FinalBedFileRC,
                 Antisense = (key[3].equals("+"))? "-" : "+";
@@ -461,12 +461,12 @@ public class ScanItFast implements Runnable {
         } else {
             FinalBedFile = BedFile + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
             // delete low scoring alignments
-            if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
+         //   if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 Aln.delete();
                 if (PRINTALL) {
                     System.out.println(FinalBedFile.replaceAll("_", "\t"));
                 }
-            } else {
+           // } else {
                 //write bed and rename alignment
                 if(RSCAPE) {
                     System.out.println(FinalBedFile.replaceAll("_", "\t") + "\t" + percentAlignPower + "\t" +
@@ -482,7 +482,7 @@ public class ScanItFast implements Runnable {
                     NewFile = new File(Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln_" + file_count);
                 }
                 boolean result = Aln.renameTo(NewFile);
-            }
+        //    }
         }
         // * * * * * *  now for the RC  * * * * * *
         try {
@@ -505,12 +505,12 @@ public class ScanItFast implements Runnable {
         } else {
             FinalBedFileRC = BedFile + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + Antisense;
             // delete low scoring alignments
-            if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
+         //   if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 AlnRC.delete();
                 if (PRINTALL) {
                     System.out.println(FinalBedFileRC.replaceAll("_", "\t"));
                 }
-            } else {
+       //     } else {
                 if(RSCAPE){
                     System.out.println(FinalBedFileRC.replaceAll("_", "\t")+ "\t" + percentAlignPower
                             + "\t" + bpCovary + "\t" + totalBasePair);
@@ -525,7 +525,7 @@ public class ScanItFast implements Runnable {
                     NewFile = new File( Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln_" + file_count);
                 }
                 boolean result = AlnRC.renameTo(NewFile);
-            }
+         //   }
             return;
         }
 
