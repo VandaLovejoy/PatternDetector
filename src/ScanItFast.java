@@ -95,9 +95,14 @@ public class ScanItFast implements Runnable {
         nameTab = (String[]) UniqueNames.toArray(nameTab);
 // first check for > 2 seqs
         int goodSeqs = intTab.size();
+
         if (goodSeqs <= 3) {
             if (VERBOSE)
                 System.out.println("-> Not Enough seqs ");
+            return;
+        }
+//check whether theres homo sapiens
+        if (!(String.valueOf(UniqueNames.get(0)).startsWith("homo_sapiens"))){
             return;
         }
 
@@ -148,8 +153,8 @@ public class ScanItFast implements Runnable {
             double identicalNuc =0.0;
             double totalNuc =0.0;
             double [][] stats1 = new double[6][6];
-            for (int i = 0; i != intTab.size(); i++) {
-                for (int j = i + 1; j != intTab.size(); j++) {
+            for (int i = 0; i != goodSeqs; i++) {
+                for (int j = i + 1; j != goodSeqs; j++) {
                     stats1[intTab.get(i)[k]][intTab.get(j)[k]] += 1.0;
 
                 }
@@ -185,7 +190,7 @@ public class ScanItFast implements Runnable {
         //Convert sequence into numbers, 0 is a, 1 is b, 2 is c, 3 is g, 4 is N
         for (int i = 0; i < intTab.get(0).length; i++){
         chars = new double[]{0.0,0.0,0.0,0.0,0.0};
-        for(int j = 0; j < intTab.size(); j++){
+        for(int j = 0; j < goodSeqs; j++){
             if(intTab.get(j)[i] == 5){
                 chars[4]+= 1.0;
                 totalChars[4]+= 1.0;
@@ -214,7 +219,7 @@ public class ScanItFast implements Runnable {
         String[] outAln = new String[goodSeqs];
         String[] outAlnRC = new String[goodSeqs];
         int iterate = 0;
-        for (int seq = 0; seq < intTab.size() ; seq++) { //removed x < goodseqs
+        for (int seq = 0; seq < goodSeqs ; seq++) { //removed x < goodseqs
             if ( keepMe[ seq ] ) {
                 outAln[iterate] = nameTab[seq].substring(0, Math.min(nameTab[seq].length(), 20));
                 outAlnRC[iterate] = nameTab[seq].substring(0, Math.min(nameTab[seq].length(), 20));
@@ -394,7 +399,7 @@ public class ScanItFast implements Runnable {
         File Aln = new File(Path + "/" + BedFile.replaceAll("\t", "_") + ".aln." + random),    //
                 AlnRC = new File(Path + "/" + BedFile.replaceAll("\t", "_") + "rc.aln." + random);  //
         // v v v v v v v v    INCLUSION STATS     v v v v v v v v v v v v v
-     //  if ( stats[4] <= 75 && stats[0] > 60){
+       if ( stats[4] <= 75 && stats[0] > 50){
          //    outCols > (filteredTab[0].length()
             //    !(percentAlignPower > 10 && bpCovary < 2) && totalBasePair != 0.0 &&
             // Write Sequences to ALN Format
@@ -419,7 +424,7 @@ public class ScanItFast implements Runnable {
                 AlnRC.delete() ;
                 return;
             }
-       /* } else {
+        } else {
             if (VERBOSE) {
                 System.out.println("---> rejected alignment");
                 System.out.println("     outcols = " + outCols + "\tuniqueseqs = " + uniqueSeqs +
@@ -430,7 +435,7 @@ public class ScanItFast implements Runnable {
             Aln.delete();
             AlnRC.delete();
             return;
-       }*/
+       }
         String FinalBedFile,
                 FinalBedFileRC,
                 Antisense = (key[3].equals("+"))? "-" : "+";
@@ -461,12 +466,15 @@ public class ScanItFast implements Runnable {
         } else {
             FinalBedFile = BedFile + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + key[3];
             // delete low scoring alignments
-         //   if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
-                Aln.delete();
+            if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
+
+
+
+            Aln.delete();
                 if (PRINTALL) {
                     System.out.println(FinalBedFile.replaceAll("_", "\t"));
                 }
-           // } else {
+            } else {
                 //write bed and rename alignment
                 if(RSCAPE) {
                     System.out.println(FinalBedFile.replaceAll("_", "\t") + "\t" + percentAlignPower + "\t" +
@@ -482,7 +490,7 @@ public class ScanItFast implements Runnable {
                     NewFile = new File(Path + "/" + FinalBedFile.replaceAll("\t", "_") + ".aln_" + file_count);
                 }
                 boolean result = Aln.renameTo(NewFile);
-        //    }
+            }
         }
         // * * * * * *  now for the RC  * * * * * *
         try {
@@ -505,12 +513,12 @@ public class ScanItFast implements Runnable {
         } else {
             FinalBedFileRC = BedFile + "_" + (int) (Double.parseDouble(SissizOutTab[10]) * -100) + "_" + Antisense;
             // delete low scoring alignments
-         //   if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
+            if (Double.parseDouble(SissizOutTab[10]) > SSZR_THRESHOLD) {
                 AlnRC.delete();
                 if (PRINTALL) {
                     System.out.println(FinalBedFileRC.replaceAll("_", "\t"));
                 }
-       //     } else {
+            } else {
                 if(RSCAPE){
                     System.out.println(FinalBedFileRC.replaceAll("_", "\t")+ "\t" + percentAlignPower
                             + "\t" + bpCovary + "\t" + totalBasePair);
@@ -525,7 +533,7 @@ public class ScanItFast implements Runnable {
                     NewFile = new File( Path + "/" + FinalBedFileRC.replaceAll("\t", "_") + ".aln_" + file_count);
                 }
                 boolean result = AlnRC.renameTo(NewFile);
-         //   }
+            }
             return;
         }
 

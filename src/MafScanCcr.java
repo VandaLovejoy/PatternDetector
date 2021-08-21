@@ -27,7 +27,9 @@ public class MafScanCcr {
             ALIFOLDBINARY = "~/ViennaRNA-2.4.16/bin/RNALalifold",
             RSCAPEBINARY = "/usr/bin/R-scape";
 
+
     static double SSZR = -3.0;
+    static File background;
 
 
     public static synchronized void main(String[] Args) throws IOException, InterruptedException {
@@ -159,7 +161,6 @@ public class MafScanCcr {
                 }
                  executeCommand(cmd, nameAlifold);
 
-
                 ReadFile = new BufferedReader(new FileReader(Args[i]));
                 // fill in array from file
                 blockAln = 0;
@@ -178,6 +179,7 @@ public class MafScanCcr {
                         } else if (Line.substring(0, 1).equals("s")) {
                             Temp = Temp + Line + "@";
                         }
+
                     } else if ((Temp.split("@").length <= 2) && Line.equals("")){
                         Temp = "";
                     }else if ((Temp.split("@").length >= 3) && Line.equals("")) { // at least 3 sequences
@@ -242,7 +244,7 @@ public class MafScanCcr {
                                         currentLine = reader.readLine();
                                         continue readAlns;
 
-                                    } else if (lengthAln > 50 && !(currentLine.startsWith("//"))) {
+                                    } else if ( !(currentLine.startsWith("//"))) {
 
                                         String[] species = currentLine.split(" ", 2);
                                         species[1] = species[1].trim();
@@ -259,7 +261,10 @@ public class MafScanCcr {
                                                 + gcSScons;
                                         String[] arrayLociChrm = lociChrm.split(", ");
 
-
+                                        if (Integer.parseInt(arrayLociChrm[2])-Integer.parseInt(arrayLociChrm[1]) < 50){
+                                            currentLine = reader.readLine();
+                                            continue readAlns;
+                                        }
                                         ScanItFast aln = new ScanItFast(associativeList,
                                                 arrayLociChrm, Path, OUT_PATH,
                                                 SSZBINARY, RSCAPEBINARY, VERBOSE, RSCAPE, PRINTALL);
