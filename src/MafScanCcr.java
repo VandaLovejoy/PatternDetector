@@ -231,8 +231,7 @@ public class MafScanCcr {
 
                                     if (currentLine.startsWith("#=GF ID ")) {
                                         arrayName = currentLine.split("[_.]");
-                                        lengthAln = Integer.parseInt(arrayName[4]) -
-                                                Integer.parseInt(arrayName[3]);
+
                                         associativeList = new ArrayList<>();
                                     } else if (currentLine.startsWith("#=GC RF")) {
                                         String[] lineReference = currentLine.split(" ");
@@ -281,7 +280,7 @@ public class MafScanCcr {
                                 reader.close();
 
 
-                                  file.delete();
+                             //     file.delete();
 
 
                             } catch (FileNotFoundException e) {

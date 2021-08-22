@@ -219,7 +219,7 @@ public class ScanItFast implements Runnable {
         String[] outAln = new String[goodSeqs];
         String[] outAlnRC = new String[goodSeqs];
         int iterate = 0;
-        for (int seq = 0; seq < goodSeqs ; seq++) { //removed x < goodseqs
+        for (int seq = 0; seq < intTab.size() ; seq++) { //removed x < goodseqs
             if ( keepMe[ seq ] ) {
                 outAln[iterate] = nameTab[seq].substring(0, Math.min(nameTab[seq].length(), 20));
                 outAlnRC[iterate] = nameTab[seq].substring(0, Math.min(nameTab[seq].length(), 20));
