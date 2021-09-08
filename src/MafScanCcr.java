@@ -260,10 +260,10 @@ public class MafScanCcr {
                                                 + gcSScons;
                                         String[] arrayLociChrm = lociChrm.split(", ");
 
-                                        if (Integer.parseInt(arrayLociChrm[2])-Integer.parseInt(arrayLociChrm[1]) < 50){
+                                        /*if (Integer.parseInt(arrayLociChrm[2])-Integer.parseInt(arrayLociChrm[1]) < 50){
                                             currentLine = reader.readLine();
                                             continue readAlns;
-                                        }
+                                        }*/
                                         ScanItFast aln = new ScanItFast(associativeList,
                                                 arrayLociChrm, Path, OUT_PATH,
                                                 SSZBINARY, RSCAPEBINARY, VERBOSE, RSCAPE, PRINTALL);
