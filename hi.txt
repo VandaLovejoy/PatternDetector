@@ -1,3 +1,2 @@
-track hi
 http://hgdownload.soe.ucsc.edu/gbdb/hg38/gnomAD/v3.1/variants/v3.1.genomes.popTable.txt
 labelOnFeature on
